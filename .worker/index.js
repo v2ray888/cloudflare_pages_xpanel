@@ -35,7 +35,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 // (disabled):crypto
 var require_crypto = __commonJS({
   "(disabled):crypto"() {
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
   }
 });
 
@@ -579,7 +579,7 @@ function decodeBase64(string, length) {
 var import_crypto, randomFallback, nextTick, BASE64_CODE, BASE64_INDEX, BCRYPT_SALT_LEN, GENSALT_DEFAULT_LOG2_ROUNDS, BLOWFISH_NUM_ROUNDS, MAX_EXECUTION_TIME, P_ORIG, S_ORIG, C_ORIG, bcryptjs_default;
 var init_bcryptjs = __esm({
   "../node_modules/bcryptjs/index.js"() {
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     import_crypto = __toESM(require_crypto(), 1);
     randomFallback = null;
     __name(randomBytes, "randomBytes");
@@ -1818,7 +1818,7 @@ var onRequestPost;
 var init_admin_login = __esm({
   "api/auth/admin-login.ts"() {
     "use strict";
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     onRequestPost = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -1926,7 +1926,7 @@ var onRequestPost2;
 var init_login = __esm({
   "api/auth/login.ts"() {
     "use strict";
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     onRequestPost2 = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -2034,7 +2034,7 @@ var onRequestPost3;
 var init_register = __esm({
   "api/auth/register.ts"() {
     "use strict";
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     onRequestPost3 = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -2136,7 +2136,7 @@ var onRequestPost4;
 var init_admin_test = __esm({
   "api/admin-test.ts"() {
     "use strict";
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     onRequestPost4 = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -2220,7 +2220,7 @@ var onRequestGet;
 var init_db_test = __esm({
   "api/db-test.ts"() {
     "use strict";
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     onRequestGet = /* @__PURE__ */ __name(async ({ env }) => {
       try {
         const result = await env.DB.prepare(
@@ -2264,7 +2264,7 @@ var onRequestPost5;
 var init_debug = __esm({
   "api/debug.ts"() {
     "use strict";
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     onRequestPost5 = /* @__PURE__ */ __name(async ({ request }) => {
       try {
         const body = await request.json();
@@ -2306,7 +2306,7 @@ var onRequestGet2;
 var init_test = __esm({
   "api/test.ts"() {
     "use strict";
-    init_functionsRoutes_0_773054640181478();
+    init_functionsRoutes_0_4964146039562456();
     onRequestGet2 = /* @__PURE__ */ __name(async () => {
       return new Response(
         JSON.stringify({
@@ -2325,10 +2325,10 @@ var init_test = __esm({
   }
 });
 
-// ../.wrangler/tmp/pages-5rxypl/functionsRoutes-0.773054640181478.mjs
+// ../.wrangler/tmp/pages-U8XQkr/functionsRoutes-0.4964146039562456.mjs
 var routes;
-var init_functionsRoutes_0_773054640181478 = __esm({
-  "../.wrangler/tmp/pages-5rxypl/functionsRoutes-0.773054640181478.mjs"() {
+var init_functionsRoutes_0_4964146039562456 = __esm({
+  "../.wrangler/tmp/pages-U8XQkr/functionsRoutes-0.4964146039562456.mjs"() {
     "use strict";
     init_admin_login();
     init_login();
@@ -2392,10 +2392,10 @@ var init_functionsRoutes_0_773054640181478 = __esm({
 });
 
 // C:/Users/Administrator/AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
-init_functionsRoutes_0_773054640181478();
+init_functionsRoutes_0_4964146039562456();
 
 // C:/Users/Administrator/AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
-init_functionsRoutes_0_773054640181478();
+init_functionsRoutes_0_4964146039562456();
 function lexer(str) {
   var tokens = [];
   var i = 0;

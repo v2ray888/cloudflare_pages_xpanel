@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "deploy": "wrangler pages deploy dist",
-    "deploy:api": "wrangler pages functions deploy functions --project-name=cloudflare-pages-xpanel",
+    "deploy:api": "wrangler pages functions build functions && wrangler pages deploy dist",
     "deploy:all": "npm run build && npm run deploy && npm run deploy:api",
     "db:generate": "wrangler d1 execute xpanel-db --env production --file=./database/schema.sql",
     "db:seed": "wrangler d1 execute xpanel-db --env production --file=./database/seed.sql",

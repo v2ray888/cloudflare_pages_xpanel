@@ -1,9 +1,9 @@
-------formdata-undici-098630103495
+------formdata-undici-001770654140
 Content-Disposition: form-data; name="metadata"
 
-{"main_module":"functionsWorker-0.4380111724931104.js"}
-------formdata-undici-098630103495
-Content-Disposition: form-data; name="functionsWorker-0.4380111724931104.js"; filename="functionsWorker-0.4380111724931104.js"
+{"main_module":"functionsWorker-0.417462390008136.js"}
+------formdata-undici-001770654140
+Content-Disposition: form-data; name="functionsWorker-0.417462390008136.js"; filename="functionsWorker-0.417462390008136.js"
 Content-Type: application/javascript+module
 
 var __create = Object.create;
@@ -40,777 +40,10 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// api/admin/recent-orders.ts
-var onRequestGet;
-var init_recent_orders = __esm({
-  "api/admin/recent-orders.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const orders = await env.DB.prepare(`
-      SELECT o.*, p.name as plan_name, u.email as user_email
-      FROM orders o
-      LEFT JOIN plans p ON o.plan_id = p.id
-      LEFT JOIN users u ON o.user_id = u.id
-      ORDER BY o.created_at DESC
-      LIMIT 10
-    `).all();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: orders.results
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Get recent orders error:", error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "\u83B7\u53D6\u6700\u8FD1\u8BA2\u5355\u5931\u8D25"
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/stats.ts
-var onRequestGet2;
-var init_stats = __esm({
-  "api/admin/stats.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet2 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const totalUsersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users"
-        ).first();
-        const newUsersTodayResult = await env.DB.prepare(
-          'SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = DATE("now")'
-        ).first();
-        const totalRevenueResult = await env.DB.prepare(
-          "SELECT SUM(final_amount) as total FROM orders WHERE status = 1"
-        ).first();
-        const todayRevenueResult = await env.DB.prepare(
-          'SELECT SUM(final_amount) as total FROM orders WHERE status = 1 AND DATE(created_at) = DATE("now")'
-        ).first();
-        const totalOrdersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM orders"
-        ).first();
-        const todayOrdersResult = await env.DB.prepare(
-          'SELECT COUNT(*) as count FROM orders WHERE DATE(created_at) = DATE("now")'
-        ).first();
-        const activeServersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM servers WHERE is_active = 1"
-        ).first();
-        const totalServersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM servers"
-        ).first();
-        const totalRedemptionCodesResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM redemption_codes"
-        ).first();
-        const usedRedemptionCodesResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM redemption_codes WHERE status = 1"
-        ).first();
-        const totalReferralsResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users WHERE referrer_id IS NOT NULL"
-        ).first();
-        const totalCommissionsResult = await env.DB.prepare(
-          "SELECT SUM(commission_amount) as total FROM referral_commissions WHERE status = 1"
-        ).first();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              totalUsers: totalUsersResult.count || 0,
-              newUsersToday: newUsersTodayResult.count || 0,
-              totalRevenue: totalRevenueResult.total || 0,
-              todayRevenue: todayRevenueResult.total || 0,
-              totalOrders: totalOrdersResult.count || 0,
-              todayOrders: todayOrdersResult.count || 0,
-              activeServers: activeServersResult.count || 0,
-              totalServers: totalServersResult.count || 0,
-              totalRedemptionCodes: totalRedemptionCodesResult.count || 0,
-              usedRedemptionCodes: usedRedemptionCodesResult.count || 0,
-              totalReferrals: totalReferralsResult.count || 0,
-              totalCommissions: totalCommissionsResult.total || 0
-            }
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Get admin stats error:", error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "\u83B7\u53D6\u7EDF\u8BA1\u6570\u636E\u5931\u8D25: " + error.message
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/stats-debug.ts
-var onRequestGet3;
-var init_stats_debug = __esm({
-  "api/admin/stats-debug.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet3 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const totalUsersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users"
-        ).first();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: "Basic query successful",
-            totalUsers: totalUsersResult.count || 0
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "Basic query failed: " + error.message,
-            error: error.toString()
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/stats-debug2.ts
-var onRequestGet4;
-var init_stats_debug2 = __esm({
-  "api/admin/stats-debug2.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet4 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const totalUsersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users"
-        ).first();
-        let ordersQuerySuccess = true;
-        let ordersResult = null;
-        try {
-          ordersResult = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM orders"
-          ).first();
-        } catch (ordersError) {
-          ordersQuerySuccess = false;
-          ordersResult = { error: ordersError.message };
-        }
-        let serversQuerySuccess = true;
-        let serversResult = null;
-        try {
-          serversResult = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM servers"
-          ).first();
-        } catch (serversError) {
-          serversQuerySuccess = false;
-          serversResult = { error: serversError.message };
-        }
-        let redemptionQuerySuccess = true;
-        let redemptionResult = null;
-        try {
-          redemptionResult = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM redemption_codes"
-          ).first();
-        } catch (redemptionError) {
-          redemptionQuerySuccess = false;
-          redemptionResult = { error: redemptionError.message };
-        }
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: "Debug query results",
-            totalUsers: totalUsersResult.count || 0,
-            orders: {
-              success: ordersQuerySuccess,
-              result: ordersResult
-            },
-            servers: {
-              success: serversQuerySuccess,
-              result: serversResult
-            },
-            redemption: {
-              success: redemptionQuerySuccess,
-              result: redemptionResult
-            }
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "Debug query failed: " + error.message,
-            error: error.toString()
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/stats-debug3.ts
-var onRequestGet5;
-var init_stats_debug3 = __esm({
-  "api/admin/stats-debug3.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet5 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const results = {};
-        try {
-          results.totalUsers = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM users"
-          ).first();
-        } catch (error) {
-          results.totalUsers = { error: error.message };
-        }
-        try {
-          results.newUsersToday = await env.DB.prepare(
-            'SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = DATE("now")'
-          ).first();
-        } catch (error) {
-          results.newUsersToday = { error: error.message };
-        }
-        try {
-          results.totalRevenue = await env.DB.prepare(
-            "SELECT SUM(final_amount) as total FROM orders WHERE status = 1"
-          ).first();
-        } catch (error) {
-          results.totalRevenue = { error: error.message };
-        }
-        try {
-          results.todayRevenue = await env.DB.prepare(
-            'SELECT SUM(final_amount) as total FROM orders WHERE status = 1 AND DATE(created_at) = DATE("now")'
-          ).first();
-        } catch (error) {
-          results.todayRevenue = { error: error.message };
-        }
-        try {
-          results.totalOrders = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM orders"
-          ).first();
-        } catch (error) {
-          results.totalOrders = { error: error.message };
-        }
-        try {
-          results.todayOrders = await env.DB.prepare(
-            'SELECT COUNT(*) as count FROM orders WHERE DATE(created_at) = DATE("now")'
-          ).first();
-        } catch (error) {
-          results.todayOrders = { error: error.message };
-        }
-        try {
-          results.activeServers = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM servers WHERE status = 1"
-          ).first();
-        } catch (error) {
-          results.activeServers = { error: error.message };
-        }
-        try {
-          results.totalServers = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM servers"
-          ).first();
-        } catch (error) {
-          results.totalServers = { error: error.message };
-        }
-        try {
-          results.totalRedemptionCodes = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM redemption_codes"
-          ).first();
-        } catch (error) {
-          results.totalRedemptionCodes = { error: error.message };
-        }
-        try {
-          results.usedRedemptionCodes = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM redemption_codes WHERE status = 1"
-          ).first();
-        } catch (error) {
-          results.usedRedemptionCodes = { error: error.message };
-        }
-        try {
-          results.totalReferrals = await env.DB.prepare(
-            "SELECT COUNT(*) as count FROM users WHERE referrer_id IS NOT NULL"
-          ).first();
-        } catch (error) {
-          results.totalReferrals = { error: error.message };
-        }
-        try {
-          results.totalCommissions = await env.DB.prepare(
-            "SELECT SUM(commission_amount) as total FROM referral_commissions WHERE status = 1"
-          ).first();
-        } catch (error) {
-          results.totalCommissions = { error: error.message };
-        }
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: "Detailed debug query results",
-            results
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "Detailed debug query failed: " + error.message,
-            error: error.toString()
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/stats-fixed.ts
-var onRequestGet6;
-var init_stats_fixed = __esm({
-  "api/admin/stats-fixed.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet6 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const totalUsersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users"
-        ).first();
-        const newUsersTodayResult = await env.DB.prepare(
-          'SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = DATE("now")'
-        ).first();
-        const totalRevenueResult = await env.DB.prepare(
-          "SELECT SUM(final_amount) as total FROM orders WHERE status = 1"
-        ).first();
-        const todayRevenueResult = await env.DB.prepare(
-          'SELECT SUM(final_amount) as total FROM orders WHERE status = 1 AND DATE(created_at) = DATE("now")'
-        ).first();
-        const totalOrdersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM orders"
-        ).first();
-        const todayOrdersResult = await env.DB.prepare(
-          'SELECT COUNT(*) as count FROM orders WHERE DATE(created_at) = DATE("now")'
-        ).first();
-        const activeServersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM servers WHERE status = 1"
-        ).first();
-        const totalServersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM servers"
-        ).first();
-        const totalRedemptionCodesResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM redemption_codes"
-        ).first();
-        const usedRedemptionCodesResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM redemption_codes WHERE status = 1"
-        ).first();
-        const totalReferralsResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users WHERE referrer_id IS NOT NULL"
-        ).first();
-        let totalCommissionsResult = { total: 0 };
-        try {
-          totalCommissionsResult = await env.DB.prepare(
-            "SELECT SUM(commission_amount) as total FROM referral_commissions WHERE status = 1"
-          ).first();
-        } catch (commissionError) {
-          console.error("Commission query error:", commissionError);
-          totalCommissionsResult = { total: 0 };
-        }
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              totalUsers: totalUsersResult.count || 0,
-              newUsersToday: newUsersTodayResult.count || 0,
-              totalRevenue: totalRevenueResult.total || 0,
-              todayRevenue: todayRevenueResult.total || 0,
-              totalOrders: totalOrdersResult.count || 0,
-              todayOrders: todayOrdersResult.count || 0,
-              activeServers: activeServersResult.count || 0,
-              totalServers: totalServersResult.count || 0,
-              totalRedemptionCodes: totalRedemptionCodesResult.count || 0,
-              usedRedemptionCodes: usedRedemptionCodesResult.count || 0,
-              totalReferrals: totalReferralsResult.count || 0,
-              totalCommissions: totalCommissionsResult.total || 0
-            }
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Get admin stats error:", error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "\u83B7\u53D6\u7EDF\u8BA1\u6570\u636E\u5931\u8D25: " + error.message
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/stats-medium.ts
-var onRequestGet7;
-var init_stats_medium = __esm({
-  "api/admin/stats-medium.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet7 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const totalUsersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users"
-        ).first();
-        const newUsersTodayResult = await env.DB.prepare(
-          'SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = DATE("now")'
-        ).first();
-        const totalRevenueResult = await env.DB.prepare(
-          "SELECT SUM(final_amount) as total FROM orders WHERE status = 1"
-        ).first();
-        const totalOrdersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM orders"
-        ).first();
-        const activeServersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM servers WHERE status = 1"
-        ).first();
-        const totalServersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM servers"
-        ).first();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              totalUsers: totalUsersResult.count || 0,
-              newUsersToday: newUsersTodayResult.count || 0,
-              totalRevenue: totalRevenueResult.total || 0,
-              totalOrders: totalOrdersResult.count || 0,
-              activeServers: activeServersResult.count || 0,
-              totalServers: totalServersResult.count || 0
-            }
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Get admin stats error:", error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "\u83B7\u53D6\u7EDF\u8BA1\u6570\u636E\u5931\u8D25: " + error.message
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/stats-simple.ts
-var onRequestGet8;
-var init_stats_simple = __esm({
-  "api/admin/stats-simple.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet8 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const totalUsersResult = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM users"
-        ).first();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              totalUsers: totalUsersResult.count || 0
-            }
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Get admin stats error:", error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "\u83B7\u53D6\u7EDF\u8BA1\u6570\u636E\u5931\u8D25: " + error.message
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/test-commission.ts
-var onRequestGet9;
-var init_test_commission = __esm({
-  "api/admin/test-commission.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet9 = /* @__PURE__ */ __name(async ({ env }) => {
-      try {
-        const result = await env.DB.prepare(
-          "SELECT SUM(commission_amount) as total FROM referral_commissions WHERE status = 1"
-        ).first();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            result
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "Commission query failed: " + error.message,
-            error: error.toString()
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-  }
-});
-
-// api/admin/users.ts
-var onRequestGet10, onRequestPut;
-var init_users = __esm({
-  "api/admin/users.ts"() {
-    "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet10 = /* @__PURE__ */ __name(async ({ request, env }) => {
-      try {
-        const url = new URL(request.url);
-        const page = parseInt(url.searchParams.get("page") || "1");
-        const limit = parseInt(url.searchParams.get("limit") || "20");
-        const search = url.searchParams.get("search") || "";
-        const status = url.searchParams.get("status");
-        const offset = (page - 1) * limit;
-        let whereClause = "WHERE 1=1";
-        const params = [];
-        if (search) {
-          whereClause += " AND (email LIKE ? OR username LIKE ?)";
-          params.push(`%${search}%`);
-          params.push(`%${search}%`);
-        }
-        if (status !== void 0 && status !== null && status !== "") {
-          whereClause += " AND status = ?";
-          params.push(parseInt(status));
-        }
-        const users = await env.DB.prepare(`
-      SELECT id, email, username, phone, referral_code, status, role,
-             balance, commission_balance, created_at, last_login_at
-      FROM users
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT ? OFFSET ?
-    `).bind(...params, limit, offset).all();
-        const countResult = await env.DB.prepare(`
-      SELECT COUNT(*) as total FROM users ${whereClause}
-    `).bind(...params).first();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: users.results,
-            total: countResult.total,
-            page,
-            limit
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Get users error:", error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "\u83B7\u53D6\u7528\u6237\u5217\u8868\u5931\u8D25"
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestGet");
-    onRequestPut = /* @__PURE__ */ __name(async ({ request, env }) => {
-      try {
-        const url = new URL(request.url);
-        const userId = url.searchParams.get("id");
-        if (!userId) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              message: "\u7528\u6237ID\u662F\u5FC5\u586B\u9879"
-            }),
-            {
-              status: 400,
-              headers: {
-                "Content-Type": "application/json"
-              }
-            }
-          );
-        }
-        const body = await request.json();
-        const { status } = body;
-        if (status !== 0 && status !== 1) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              message: "\u65E0\u6548\u7684\u72B6\u6001\u503C"
-            }),
-            {
-              status: 400,
-              headers: {
-                "Content-Type": "application/json"
-              }
-            }
-          );
-        }
-        await env.DB.prepare(
-          'UPDATE users SET status = ?, updated_at = datetime("now") WHERE id = ?'
-        ).bind(status, userId).run();
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: status === 1 ? "\u7528\u6237\u5DF2\u542F\u7528" : "\u7528\u6237\u5DF2\u7981\u7528"
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      } catch (error) {
-        console.error("Update user status error:", error);
-        return new Response(
-          JSON.stringify({
-            success: false,
-            message: "\u66F4\u65B0\u7528\u6237\u72B6\u6001\u5931\u8D25"
-          }),
-          {
-            status: 500,
-            headers: {
-              "Content-Type": "application/json"
-            }
-          }
-        );
-      }
-    }, "onRequestPut");
-  }
-});
-
 // (disabled):crypto
 var require_crypto = __commonJS({
   "(disabled):crypto"() {
-    init_functionsRoutes_0_29623683859637895();
+    init_functionsRoutes_0_12586706165420214();
   }
 });
 
@@ -1354,7 +587,7 @@ function decodeBase64(string, length) {
 var import_crypto, randomFallback, nextTick, BASE64_CODE, BASE64_INDEX, BCRYPT_SALT_LEN, GENSALT_DEFAULT_LOG2_ROUNDS, BLOWFISH_NUM_ROUNDS, MAX_EXECUTION_TIME, P_ORIG, S_ORIG, C_ORIG, bcryptjs_default;
 var init_bcryptjs = __esm({
   "../node_modules/bcryptjs/index.js"() {
-    init_functionsRoutes_0_29623683859637895();
+    init_functionsRoutes_0_12586706165420214();
     import_crypto = __toESM(require_crypto(), 1);
     randomFallback = null;
     __name(randomBytes, "randomBytes");
@@ -2593,7 +1826,7 @@ var onRequestPost;
 var init_admin_login = __esm({
   "api/auth/admin-login.ts"() {
     "use strict";
-    init_functionsRoutes_0_29623683859637895();
+    init_functionsRoutes_0_12586706165420214();
     onRequestPost = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -2701,7 +1934,7 @@ var onRequestPost2;
 var init_login = __esm({
   "api/auth/login.ts"() {
     "use strict";
-    init_functionsRoutes_0_29623683859637895();
+    init_functionsRoutes_0_12586706165420214();
     onRequestPost2 = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -2809,7 +2042,7 @@ var onRequestPost3;
 var init_register = __esm({
   "api/auth/register.ts"() {
     "use strict";
-    init_functionsRoutes_0_29623683859637895();
+    init_functionsRoutes_0_12586706165420214();
     onRequestPost3 = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -2911,7 +2144,7 @@ var onRequestPost4;
 var init_admin_test = __esm({
   "api/admin-test.ts"() {
     "use strict";
-    init_functionsRoutes_0_29623683859637895();
+    init_functionsRoutes_0_12586706165420214();
     onRequestPost4 = /* @__PURE__ */ __name(async ({ request, env }) => {
       try {
         const body = await request.json();
@@ -2991,12 +2224,12 @@ var init_admin_test = __esm({
 });
 
 // api/db-test.ts
-var onRequestGet11;
+var onRequestGet;
 var init_db_test = __esm({
   "api/db-test.ts"() {
     "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet11 = /* @__PURE__ */ __name(async ({ env }) => {
+    init_functionsRoutes_0_12586706165420214();
+    onRequestGet = /* @__PURE__ */ __name(async ({ env }) => {
       try {
         const result = await env.DB.prepare(
           "SELECT COUNT(*) as count FROM users"
@@ -3039,7 +2272,7 @@ var onRequestPost5;
 var init_debug = __esm({
   "api/debug.ts"() {
     "use strict";
-    init_functionsRoutes_0_29623683859637895();
+    init_functionsRoutes_0_12586706165420214();
     onRequestPost5 = /* @__PURE__ */ __name(async ({ request }) => {
       try {
         const body = await request.json();
@@ -3077,12 +2310,12 @@ var init_debug = __esm({
 });
 
 // api/test.ts
-var onRequestGet12;
+var onRequestGet2;
 var init_test = __esm({
   "api/test.ts"() {
     "use strict";
-    init_functionsRoutes_0_29623683859637895();
-    onRequestGet12 = /* @__PURE__ */ __name(async () => {
+    init_functionsRoutes_0_12586706165420214();
+    onRequestGet2 = /* @__PURE__ */ __name(async () => {
       return new Response(
         JSON.stringify({
           success: true,
@@ -3100,22 +2333,11 @@ var init_test = __esm({
   }
 });
 
-// ../.wrangler/tmp/pages-JyBKbW/functionsRoutes-0.29623683859637895.mjs
+// ../.wrangler/tmp/pages-k6q3wC/functionsRoutes-0.12586706165420214.mjs
 var routes;
-var init_functionsRoutes_0_29623683859637895 = __esm({
-  "../.wrangler/tmp/pages-JyBKbW/functionsRoutes-0.29623683859637895.mjs"() {
+var init_functionsRoutes_0_12586706165420214 = __esm({
+  "../.wrangler/tmp/pages-k6q3wC/functionsRoutes-0.12586706165420214.mjs"() {
     "use strict";
-    init_recent_orders();
-    init_stats();
-    init_stats_debug();
-    init_stats_debug2();
-    init_stats_debug3();
-    init_stats_fixed();
-    init_stats_medium();
-    init_stats_simple();
-    init_test_commission();
-    init_users();
-    init_users();
     init_admin_login();
     init_login();
     init_register();
@@ -3124,83 +2346,6 @@ var init_functionsRoutes_0_29623683859637895 = __esm({
     init_debug();
     init_test();
     routes = [
-      {
-        routePath: "/api/admin/recent-orders",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet]
-      },
-      {
-        routePath: "/api/admin/stats",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet2]
-      },
-      {
-        routePath: "/api/admin/stats-debug",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet3]
-      },
-      {
-        routePath: "/api/admin/stats-debug2",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet4]
-      },
-      {
-        routePath: "/api/admin/stats-debug3",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet5]
-      },
-      {
-        routePath: "/api/admin/stats-fixed",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet6]
-      },
-      {
-        routePath: "/api/admin/stats-medium",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet7]
-      },
-      {
-        routePath: "/api/admin/stats-simple",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet8]
-      },
-      {
-        routePath: "/api/admin/test-commission",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet9]
-      },
-      {
-        routePath: "/api/admin/users",
-        mountPath: "/api/admin",
-        method: "GET",
-        middlewares: [],
-        modules: [onRequestGet10]
-      },
-      {
-        routePath: "/api/admin/users",
-        mountPath: "/api/admin",
-        method: "PUT",
-        middlewares: [],
-        modules: [onRequestPut]
-      },
       {
         routePath: "/api/auth/admin-login",
         mountPath: "/api/auth",
@@ -3234,7 +2379,7 @@ var init_functionsRoutes_0_29623683859637895 = __esm({
         mountPath: "/api",
         method: "GET",
         middlewares: [],
-        modules: [onRequestGet11]
+        modules: [onRequestGet]
       },
       {
         routePath: "/api/debug",
@@ -3248,17 +2393,17 @@ var init_functionsRoutes_0_29623683859637895 = __esm({
         mountPath: "/api",
         method: "GET",
         middlewares: [],
-        modules: [onRequestGet12]
+        modules: [onRequestGet2]
       }
     ];
   }
 });
 
-// C:/Users/Administrator/AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
-init_functionsRoutes_0_29623683859637895();
+// ../node_modules/wrangler/templates/pages-template-worker.ts
+init_functionsRoutes_0_12586706165420214();
 
-// C:/Users/Administrator/AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
-init_functionsRoutes_0_29623683859637895();
+// ../node_modules/path-to-regexp/dist.es2015/index.js
+init_functionsRoutes_0_12586706165420214();
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -3584,7 +2729,7 @@ function pathToRegexp(path, keys, options) {
 }
 __name(pathToRegexp, "pathToRegexp");
 
-// C:/Users/Administrator/AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
+// ../node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;
@@ -3707,4 +2852,4 @@ export {
   pages_template_worker_default as default
 };
 
-------formdata-undici-098630103495--
+------formdata-undici-001770654140--
