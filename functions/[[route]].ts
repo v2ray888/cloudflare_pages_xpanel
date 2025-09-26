@@ -2,18 +2,18 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { HTTPException } from 'hono/http-exception'
-import { authRoutes } from './routes/auth'
-import { userRoutes } from './routes/users'
-import { planRoutes } from './routes/plans'
-import { orderRoutes } from './routes/orders'
-import { serverRoutes } from './routes/servers'
-import { redemptionRoutes } from './routes/redemption'
-import { referralRoutes } from './routes/referrals'
-import { adminRoutes } from './routes/admin'
-import { paymentRoutes } from './routes/payments'
+import { authRoutes } from './api/routes/auth'
+import { userRoutes } from './api/routes/users'
+import { planRoutes } from './api/routes/plans'
+import { orderRoutes } from './api/routes/orders'
+import { serverRoutes } from './api/routes/servers'
+import { redemptionRoutes } from './api/routes/redemption'
+import { referralRoutes } from './api/routes/referrals'
+import { adminRoutes } from './api/routes/admin'
+import { paymentRoutes } from './api/routes/payments'
 
 type Bindings = {
-  DB: D1Database
+  DB: any
   JWT_SECRET: string
   PAYMENT_SECRET: string
 }
