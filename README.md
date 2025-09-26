@@ -231,16 +231,63 @@ database_id = "your-database-id"
 
 ## 🚀 部署指南
 
+### 数据库配置
+
+1. 创建 D1 数据库
+```bash
+# 创建生产环境数据库
+npx wrangler d1 create xpanel-db
+```
+
+2. 更新 wrangler.toml 中的 database_id
+
+3. 执行数据库迁移
+```bash
+# 生产环境
+npx wrangler d1 execute xpanel-db --env production --file=./database/schema.sql
+npx wrangler d1 execute xpanel-db --env production --file=./database/seed.sql
+```
+
 ### Cloudflare Pages 部署
-1. 连接 GitHub 仓库
-2. 设置构建命令：`npm run build`
-3. 设置输出目录：`dist`
-4. 配置环境变量
+
+1. 构建项目
+```bash
+npm run build
+```
+
+2. 部署前端到 Cloudflare Pages
+```bash
+npm run deploy
+```
+
+或者使用 Wrangler 命令：
+```bash
+npx wrangler pages deploy dist
+```
 
 ### Cloudflare Workers 部署
-1. 配置 wrangler.toml
-2. 设置环境变量
-3. 执行部署命令：`npm run deploy:api`
+
+1. 部署后端 API 到 Cloudflare Workers
+```bash
+npm run deploy:api
+```
+
+或者使用 Wrangler 命令：
+```bash
+npx wrangler deploy functions/api/[[route]].ts
+```
+
+### 环境变量配置
+
+确保在 wrangler.toml 中正确配置了环境变量：
+```toml
+[env.production]
+vars = { 
+  ENVIRONMENT = "production", 
+  JWT_SECRET = "your-secure-jwt-secret", 
+  PAYMENT_SECRET = "your-secure-payment-secret" 
+}
+```
 
 ### 域名配置
 1. 添加自定义域名

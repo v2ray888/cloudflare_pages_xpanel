@@ -17,11 +17,3 @@ vars = { ENVIRONMENT = "preview", JWT_SECRET = "my-dev-jwt-secret-key", PAYMENT_
 binding = "DB"
 database_name = "xpanel-db"
 database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
-
-# Add external modules configuration
-[build]
-command = "npm run build"
-
-[dev]
-ip = "127.0.0.1"
-port = 8787

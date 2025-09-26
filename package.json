@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "deploy": "wrangler pages deploy dist",
     "deploy:api": "wrangler deploy functions/api/[[route]].ts",
+    "deploy:all": "npm run build && npm run deploy && npm run deploy:api",
     "db:generate": "wrangler d1 execute xpanel-db --env production --file=./database/schema.sql",
     "db:seed": "wrangler d1 execute xpanel-db --env production --file=./database/seed.sql",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
