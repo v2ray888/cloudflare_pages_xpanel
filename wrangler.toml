@@ -3,17 +3,25 @@ compatibility_date = "2024-01-01"
 pages_build_output_dir = "dist"
 
 [env.production]
-vars = { ENVIRONMENT = "production" }
+vars = { ENVIRONMENT = "production", JWT_SECRET = "my-dev-jwt-secret-key", PAYMENT_SECRET = "my-dev-payment-secret-key" }
 
 [[env.production.d1_databases]]
 binding = "DB"
-database_name = "vpn-xpanel-db"
-database_id = "your-d1-database-id"
+database_name = "xpanel-db"
+database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
 
 [env.preview]
-vars = { ENVIRONMENT = "preview" }
+vars = { ENVIRONMENT = "preview", JWT_SECRET = "my-dev-jwt-secret-key", PAYMENT_SECRET = "my-dev-payment-secret-key" }
 
 [[env.preview.d1_databases]]
 binding = "DB"
-database_name = "vpn-xpanel-db-dev"
-database_id = "your-d1-database-dev-id"
+database_name = "xpanel-db"
+database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
+
+# Add external modules configuration
+[build]
+command = "npm run build"
+
+[dev]
+ip = "127.0.0.1"
+port = 8787

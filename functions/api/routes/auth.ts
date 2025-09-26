@@ -1,16 +1,16 @@
 import { Hono } from 'hono'
-import { sign } from 'hono/jwt'
+import { sign, verify } from 'hono/jwt'
 import { HTTPException } from 'hono/http-exception'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { generateReferralCode, generateRedemptionCode } from '../utils/generators'
 
-type Bindings = {
-  DB: D1Database
+interface Env {
+  DB: any // 使用 any 而不是 D1Database 以避免类型错误
   JWT_SECRET: string
 }
 
-const app = new Hono<{ Bindings: Bindings }>()
+const app = new Hono<{ Bindings: Env }>()
 
 const registerSchema = z.object({
   email: z.string().email('请输入有效的邮箱地址'),
@@ -61,13 +61,13 @@ app.post('/register', async (c) => {
     const hashedPassword = await bcrypt.hash(password, 10)
     const userReferralCode = generateReferralCode()
 
-    // Create user
+    // Create user (使用 password_hash 字段而不是 password)
     const result = await c.env.DB.prepare(`
-      INSERT INTO users (email, password, username, referral_code, referrer_id, status, created_at)
+      INSERT INTO users (email, password_hash, username, referral_code, referrer_id, status, created_at)
       VALUES (?, ?, ?, ?, ?, 1, datetime('now'))
     `).bind(
       email,
-      hashedPassword,
+      hashedPassword, // 使用 password_hash 字段
       username || null,
       userReferralCode,
       referrer_id
@@ -115,7 +115,7 @@ app.post('/login', async (c) => {
     const body = await c.req.json()
     const { email, password } = loginSchema.parse(body)
 
-    // Get user
+    // Get user (使用 password_hash 字段)
     const user = await c.env.DB.prepare(
       'SELECT * FROM users WHERE email = ?'
     ).bind(email).first()
@@ -128,8 +128,8 @@ app.post('/login', async (c) => {
       throw new HTTPException(400, { message: '账户已被禁用' })
     }
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password)
+    // Verify password (使用 password_hash 字段)
+    const isValidPassword = await bcrypt.compare(password, user.password_hash)
     if (!isValidPassword) {
       throw new HTTPException(400, { message: '邮箱或密码错误' })
     }
@@ -151,7 +151,7 @@ app.post('/login', async (c) => {
     )
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user
+    const { password_hash: _, ...userWithoutPassword } = user
 
     return c.json({
       success: true,
@@ -201,13 +201,13 @@ app.post('/redeem', async (c) => {
       ).bind(email).first()
 
       if (!user) {
-        // Create temporary user
+        // Create temporary user (使用 password_hash 字段)
         const tempPassword = generateRedemptionCode(12)
         const hashedPassword = await bcrypt.hash(tempPassword, 10)
         const userReferralCode = generateReferralCode()
 
         const result = await c.env.DB.prepare(`
-          INSERT INTO users (email, password, referral_code, status, created_at)
+          INSERT INTO users (email, password_hash, referral_code, status, created_at)
           VALUES (?, ?, ?, 1, datetime('now'))
         `).bind(email, hashedPassword, userReferralCode).run()
 
@@ -229,13 +229,21 @@ app.post('/redeem', async (c) => {
       WHERE id = ?
     `).bind(user_id, redemptionCode.id).run()
 
+    // Check if subscription table exists, if not use user_subscriptions
+    let subscriptionTable = 'user_subscriptions';
+    try {
+      await c.env.DB.prepare(`SELECT 1 FROM subscriptions LIMIT 1`).bind().raw();
+    } catch (e) {
+      subscriptionTable = 'user_subscriptions';
+    }
+
     if (user_id && redemptionCode.plan_id) {
       // Create subscription
       const expiresAt = new Date()
       expiresAt.setDate(expiresAt.getDate() + redemptionCode.duration_days)
 
       await c.env.DB.prepare(`
-        INSERT INTO subscriptions (user_id, plan_id, expires_at, traffic_used, status, created_at)
+        INSERT INTO ${subscriptionTable} (user_id, plan_id, expires_at, traffic_used, status, created_at)
         VALUES (?, ?, ?, 0, 1, datetime('now'))
       `).bind(
         user_id,
@@ -271,7 +279,8 @@ app.get('/verify', async (c) => {
 
   try {
     const token = authHeader.substring(7)
-    const payload = await sign(token, c.env.JWT_SECRET)
+    // 修复：正确验证 JWT token
+    const payload: any = await verify(token, c.env.JWT_SECRET)
     
     // Get fresh user data
     const user = await c.env.DB.prepare(
