@@ -14,17 +14,14 @@
 ### 2. 检查环境变量配置
 参考 [ENV_VARIABLES_SETUP.md](file:///e:/webapp/cloudflare_xpanel/ENV_VARIABLES_SETUP.md) 文件配置必需的环境变量：
 
-1. 登录 Cloudflare Dashboard
-2. 进入 Workers & Pages
-3. 选择项目 cloudflare-xpanel
-4. 点击 Settings -> Environment variables
-5. 确保添加了以下变量：
-   - `JWT_SECRET`: [您的JWT密钥]
-   - `PAYMENT_SECRET`: [您的支付密钥]
-   - `ENVIRONMENT`: production
-6. 配置 D1 database bindings：
-   - Variable name: `DB`
-   - Database: 选择您的 `xpanel-db` 数据库
+1. 验证 wrangler.toml 文件中的环境变量配置：
+   ```bash
+   node scripts/verify-env-config.js
+   ```
+
+2. 确保使用了安全的密钥（避免使用 my-dev-* 等默认密钥）
+
+3. 确认生产环境和预览环境的配置一致
 
 ### 3. 运行自动化检查脚本
 ```bash
@@ -74,7 +71,7 @@ node scripts/comprehensive-api-test.js
 - [ ] 进入Workers & Pages
 - [ ] 查看部署日志确认无错误
 - [ ] 确认最新的提交已部署
-- [ ] 确认环境变量已正确设置
+- [ ] 确认环境变量已正确配置
 
 ## 常见问题排查
 
@@ -102,8 +99,8 @@ node scripts/comprehensive-api-test.js
 4. 等待Cloudflare完成最新部署
 
 ### 如果怀疑是环境变量问题：
-1. 确认Cloudflare Dashboard中已设置所有必需的环境变量
-2. 检查JWT_SECRET和PAYMENT_SECRET是否已正确配置
+1. 确认wrangler.toml中已设置所有必需的环境变量
+2. 检查JWT_SECRET和PAYMENT_SECRET是否已更新为安全密钥
 3. 确认D1数据库绑定已正确设置
 4. 重新部署项目以应用环境变量更改
 
