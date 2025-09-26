@@ -16,28 +16,38 @@
 node scripts/check-deployment.js
 ```
 
-### 3. 手动验证关键功能
+### 3. 验证CORS修复
+```bash
+node scripts/test-cors-fix.js
+```
 
-#### 3.1 检查网站可访问性
+### 4. 手动验证关键功能
+
+#### 4.1 检查网站可访问性
 - [ ] 访问 https://xpanel.121858.xyz
 - [ ] 确认页面正常加载
 
-#### 3.2 验证API端点
+#### 4.2 验证API端点
 - [ ] 访问 https://xpanel.121858.xyz/api/health
 - [ ] 确认返回JSON格式的健康检查信息
 
-#### 3.3 测试注册功能
+#### 4.3 测试注册功能
 - [ ] 访问 https://xpanel.121858.xyz
 - [ ] 点击注册按钮
 - [ ] 填写注册表单并提交
 - [ ] 确认注册成功或返回合理的错误信息
 
-#### 3.4 测试登录功能
+#### 4.4 测试登录功能
 - [ ] 访问 https://xpanel.121858.xyz/login
 - [ ] 使用已注册的账户登录
 - [ ] 确认登录成功并跳转到用户仪表板
 
-### 4. 检查Cloudflare Dashboard
+#### 4.5 测试跨域请求（CORS）
+- [ ] 在浏览器开发者工具中检查网络请求
+- [ ] 确认注册请求不再出现CORS错误
+- [ ] 检查响应头中包含正确的CORS字段
+
+### 5. 检查Cloudflare Dashboard
 - [ ] 登录Cloudflare Dashboard
 - [ ] 进入Workers & Pages
 - [ ] 查看部署日志确认无错误
@@ -55,12 +65,18 @@ node scripts/check-deployment.js
 2. 检查DNS设置
 3. 确认自定义域名已正确配置
 
+### 如果仍然出现CORS错误：
+1. 确认CORS配置中包含了所有可能的域名
+2. 检查响应头中是否正确设置了Access-Control-Allow-Origin
+3. 确认预检请求（OPTIONS）能正确处理
+
 ## 完成确认
 
 - [ ] 网站可正常访问
 - [ ] 注册功能正常工作
 - [ ] 登录功能正常工作
 - [ ] 用户可以访问仪表板
+- [ ] 无CORS错误
 
 ## 后续步骤
 

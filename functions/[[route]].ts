@@ -63,7 +63,7 @@ app.route('/api/payments', paymentRoutes)
 // 注意：我们排除了认证路由，因为登录和注册应该是公开的
 app.use('/api/*', async (c, next) => {
   // 排除公开路由
-  const publicRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/redeem'];
+  const publicRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/redeem', '/api/auth/verify'];
   const currentPath = c.req.path;
   
   if (publicRoutes.includes(currentPath)) {
