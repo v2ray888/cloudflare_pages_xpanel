@@ -21,4 +21,3 @@ PAYMENT_SECRET = "ssUl$ZWvY+A_To12A;[pJA2hcG(M)[E1"
 binding = "DB"
 database_name = "xpanel-db"
 database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
-}
