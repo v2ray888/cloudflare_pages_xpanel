@@ -2,7 +2,8 @@ import axios, { AxiosResponse } from 'axios'
 import { ApiResponse } from '@/types'
 import { toast } from 'react-hot-toast'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+// 使用生产环境URL作为默认值
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://xpanel.121858.xyz/api'
 
 // Create axios instance
 const api = axios.create({
@@ -210,7 +211,7 @@ export const usersApi = {
 // Redemption API
 export const redemptionApi = {
   redeem: (data: { code: string; email?: string }) =>
-    api.post('/redeem', data),
+    api.post('/redemption/redeem', data),
   
   generate: (data: { plan_id: number; count: number; expires_at?: string; batch_id?: string }) =>
     api.post('/admin/redemption-codes/generate', data),

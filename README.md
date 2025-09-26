@@ -294,6 +294,44 @@ vars = {
 2. 配置 DNS 记录
 3. 启用 SSL 证书
 
+## 🔄 重新部署指南
+
+如果您遇到API无法访问的问题，可能需要重新部署您的Cloudflare Pages项目：
+
+### 使用脚本重新部署
+
+#### Windows系统
+```bash
+# 运行Windows批处理脚本
+.\scripts\redeploy.bat
+```
+
+#### macOS/Linux系统
+```bash
+# 运行Shell脚本
+chmod +x ./scripts/redeploy.sh
+./scripts/redeploy.sh
+```
+
+### 手动重新部署
+
+1. 构建项目
+```bash
+npm run build
+```
+
+2. 部署到Cloudflare Pages
+```bash
+npx wrangler pages deploy dist --project-name=cloudflare-xpanel
+```
+
+### 验证部署
+
+部署完成后，您可以访问以下URL来验证API是否正常工作：
+- https://xpanel.121858.xyz/test - 测试端点
+- https://xpanel.121858.xyz/health - 健康检查
+- https://xpanel.121858.xyz/api/auth/register - 注册接口
+
 ## 🔧 开发指南
 
 ### 代码规范

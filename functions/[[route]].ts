@@ -22,7 +22,7 @@ const app = new Hono<{ Bindings: Bindings }>()
 
 // CORS middleware
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'https://your-domain.pages.dev'],
+  origin: ['http://localhost:5173', 'https://xpanel.121858.xyz'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -54,17 +54,36 @@ app.get('/health', (c) => {
   })
 })
 
-// Public routes
-app.route('/auth', authRoutes)
-app.route('/plans', planRoutes)
-app.route('/payments', paymentRoutes)
+// Public routes (这些路由不需要认证)
+app.route('/api/auth', authRoutes)
+app.route('/api/plans', planRoutes)
+app.route('/api/payments', paymentRoutes)
 
 // Protected routes middleware
+// 注意：我们排除了认证路由，因为登录和注册应该是公开的
 app.use('/api/*', async (c, next) => {
-  const jwtMiddleware = jwt({
-    secret: c.env.JWT_SECRET,
-  })
-  return jwtMiddleware(c, next)
+  // 排除公开路由
+  const publicRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/redeem'];
+  const currentPath = c.req.path;
+  
+  if (publicRoutes.includes(currentPath)) {
+    return next();
+  }
+  
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new HTTPException(401, { message: 'Token required' })
+  }
+
+  const token = authHeader.substring(7)
+  try {
+    const secret = c.env.JWT_SECRET;
+    const payload = await jwt({ secret })(c, async () => {});
+    c.set('jwtPayload', payload);
+    await next()
+  } catch (error) {
+    throw new HTTPException(401, { message: 'Invalid token' })
+  }
 })
 
 // Protected routes
