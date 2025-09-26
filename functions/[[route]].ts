@@ -11,6 +11,7 @@ import { redemptionRoutes } from './api/routes/redemption'
 import { referralRoutes } from './api/routes/referrals'
 import { adminRoutes } from './api/routes/admin'
 import { paymentRoutes } from './api/routes/payments'
+import testFunction from './api/test-function'
 
 type Bindings = {
   DB: any
@@ -53,6 +54,9 @@ app.get('/health', (c) => {
     timestamp: new Date().toISOString()
   })
 })
+
+// Test function
+app.route('/api/test-function', testFunction)
 
 // Public routes (这些路由不需要认证)
 app.route('/api/auth', authRoutes)
