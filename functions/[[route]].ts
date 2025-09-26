@@ -22,7 +22,7 @@ const app = new Hono<{ Bindings: Bindings }>()
 
 // CORS middleware
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'https://xpanel.121858.xyz'],
+  origin: ['http://localhost:5173', 'https://xpanel.121858.xyz', 'https://*.cloudflare-pages-xpanel.pages.dev'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

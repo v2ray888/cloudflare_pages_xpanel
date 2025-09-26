@@ -2,8 +2,13 @@ import axios, { AxiosResponse } from 'axios'
 import { ApiResponse } from '@/types'
 import { toast } from 'react-hot-toast'
 
-// 使用生产环境URL作为默认值
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://xpanel.121858.xyz/api'
+// 使用生产环境URL作为默认值，同时支持开发环境
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (window.location.hostname.endsWith('.pages.dev') 
+    ? `https://${window.location.hostname}` 
+    : 'https://xpanel.121858.xyz')
+
+console.log('API Base URL:', API_BASE_URL)
 
 // Create axios instance
 const api = axios.create({
@@ -12,6 +17,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
 
 // Request interceptor to add auth token
@@ -85,212 +91,212 @@ export default api
 // Auth API
 export const authApi = {
   login: (data: { email: string; password: string }) =>
-    api.post('/auth/login', data),
+    api.post('/api/auth/login', data),
   
   register: (data: { email: string; password: string; username?: string; referral_code?: string }) =>
-    api.post('/auth/register', data),
+    api.post('/api/auth/register', data),
   
   logout: () =>
-    api.post('/auth/logout'),
+    api.post('/api/auth/logout'),
   
   me: () =>
-    api.get('/auth/me'),
+    api.get('/api/auth/me'),
   
   forgotPassword: (data: { email: string }) =>
-    api.post('/auth/forgot-password', data),
+    api.post('/api/auth/forgot-password', data),
   
   resetPassword: (data: { token: string; password: string }) =>
-    api.post('/auth/reset-password', data),
+    api.post('/api/auth/reset-password', data),
 }
 
 // Plans API
 export const plansApi = {
   getAll: () =>
-    api.get('/plans'),
+    api.get('/api/plans'),
   
   getById: (id: number) =>
-    api.get(`/plans/${id}`),
+    api.get(`/api/plans/${id}`),
   
   create: (data: any) =>
-    api.post('/admin/plans', data),
+    api.post('/api/admin/plans', data),
   
   update: (id: number, data: any) =>
-    api.put(`/admin/plans/${id}`, data),
+    api.put(`/api/admin/plans/${id}`, data),
   
   delete: (id: number) =>
-    api.delete(`/admin/plans/${id}`),
+    api.delete(`/api/admin/plans/${id}`),
 }
 
 // Orders API
 export const ordersApi = {
   create: (data: { plan_id: number; payment_method: string }) =>
-    api.post('/orders', data),
+    api.post('/api/orders', data),
   
   getById: (id: number) =>
-    api.get(`/orders/${id}`),
+    api.get(`/api/orders/${id}`),
   
   getOrder: (id: number) =>
-    api.get(`/orders/${id}`),
+    api.get(`/api/orders/${id}`),
   
   pay: (id: number) =>
-    api.post(`/orders/${id}/pay`),
+    api.post(`/api/orders/${id}/pay`),
   
   getUserOrders: (params?: any) =>
-    api.get('/user/orders', { params }),
+    api.get('/api/user/orders', { params }),
   
   getAll: (params?: any) =>
-    api.get('/admin/orders', { params }),
+    api.get('/api/admin/orders', { params }),
   
   updateStatus: (id: number, status: number) =>
-    api.put(`/admin/orders/${id}/status`, { status }),
+    api.put(`/api/admin/orders/${id}/status`, { status }),
 }
 
 // Payment API
 export const paymentApi = {
-  createPayment: (data: any) => api.post('/payments', data),
-  getPaymentStatus: (id: string) => api.get(`/payments/${id}/status`),
-  getPaymentMethods: () => api.get('/payments/methods'),
-  processPayment: (data: any) => api.post('/payments/process', data),
+  createPayment: (data: any) => api.post('/api/payments', data),
+  getPaymentStatus: (id: string) => api.get(`/api/payments/${id}/status`),
+  getPaymentMethods: () => api.get('/api/payments/methods'),
+  processPayment: (data: any) => api.post('/api/payments/process', data),
 }
 
 // Servers API
 export const serversApi = {
   getAll: () =>
-    api.get('/servers'),
+    api.get('/api/servers'),
   
   getUserServers: () =>
-    api.get('/user/servers'),
+    api.get('/api/user/servers'),
   
   create: (data: any) =>
-    api.post('/admin/servers', data),
+    api.post('/api/admin/servers', data),
   
   update: (id: number, data: any) =>
-    api.put(`/admin/servers/${id}`, data),
+    api.put(`/api/admin/servers/${id}`, data),
   
   delete: (id: number) =>
-    api.delete(`/admin/servers/${id}`),
+    api.delete(`/api/admin/servers/${id}`),
   
   testConnection: (id: number) =>
-    api.post(`/admin/servers/${id}/test`),
+    api.post(`/api/admin/servers/${id}/test`),
 }
 
 // Users API
 export const usersApi = {
   getProfile: () =>
-    api.get('/user/profile'),
+    api.get('/api/user/profile'),
   
   updateProfile: (data: any) =>
-    api.put('/user/profile', data),
+    api.put('/api/user/profile', data),
   
   changePassword: (data: { current_password: string; new_password: string }) =>
-    api.put('/user/password', data),
+    api.put('/api/user/password', data),
   
   getSubscription: () =>
-    api.get('/user/subscription'),
+    api.get('/api/user/subscription'),
   
   getStats: () =>
-    api.get('/user/stats'),
+    api.get('/api/user/stats'),
   
   // Admin endpoints
   getAll: (params?: any) =>
-    api.get('/admin/users', { params }),
+    api.get('/api/admin/users', { params }),
   
   getById: (id: number) =>
-    api.get(`/admin/users/${id}`),
+    api.get(`/api/admin/users/${id}`),
   
   update: (id: number, data: any) =>
-    api.put(`/admin/users/${id}`, data),
+    api.put(`/api/admin/users/${id}`, data),
   
   updateStatus: (id: number, status: number) =>
-    api.put(`/admin/users/${id}/status`, { status }),
+    api.put(`/api/admin/users/${id}/status`, { status }),
   
   resetTraffic: (id: number) =>
-    api.post(`/admin/users/${id}/reset-traffic`),
+    api.post(`/api/admin/users/${id}/reset-traffic`),
 }
 
 // Redemption API
 export const redemptionApi = {
   redeem: (data: { code: string; email?: string }) =>
-    api.post('/redemption/redeem', data),
+    api.post('/api/redemption/redeem', data),
   
   generate: (data: { plan_id: number; count: number; expires_at?: string; batch_id?: string }) =>
-    api.post('/admin/redemption-codes/generate', data),
+    api.post('/api/admin/redemption-codes/generate', data),
   
   getAll: (params?: any) =>
-    api.get('/admin/redemption-codes', { params }),
+    api.get('/api/admin/redemption-codes', { params }),
   
   delete: (id: number) =>
-    api.delete(`/admin/redemption-codes/${id}`),
+    api.delete(`/api/admin/redemption-codes/${id}`),
   
   batchDelete: (ids: number[]) =>
-    api.post('/admin/redemption-codes/batch-delete', { ids }),
+    api.post('/api/admin/redemption-codes/batch-delete', { ids }),
 }
 
 // Referral API
 export const referralApi = {
   getStats: () =>
-    api.get('/user/referral/stats'),
+    api.get('/api/user/referral/stats'),
   
   getCommissions: (params?: any) =>
-    api.get('/user/referral/commissions', { params }),
+    api.get('/api/user/referral/commissions', { params }),
   
   getReferrals: (params?: any) =>
-    api.get('/user/referral/referrals', { params }),
+    api.get('/api/user/referral/referrals', { params }),
   
   withdraw: (amount: number) =>
-    api.post('/user/referral/withdraw', { amount }),
+    api.post('/api/user/referral/withdraw', { amount }),
   
   // Admin endpoints
   getAllCommissions: (params?: any) =>
-    api.get('/admin/referrals/commissions', { params }),
+    api.get('/api/admin/referrals/commissions', { params }),
   
   settleCommission: (id: number) =>
-    api.post(`/admin/referrals/commissions/${id}/settle`),
+    api.post(`/api/admin/referrals/commissions/${id}/settle`),
   
   getSettings: () =>
-    api.get('/admin/referrals/settings'),
+    api.get('/api/admin/referrals/settings'),
   
   updateSettings: (data: any) =>
-    api.put('/admin/referrals/settings', data),
+    api.put('/api/admin/referrals/settings', data),
 }
 
 // Dashboard API
 export const dashboardApi = {
   getStats: () =>
-    api.get('/admin/dashboard/stats'),
+    api.get('/api/admin/dashboard/stats'),
   
   getChartData: (type: string, period: string) =>
-    api.get(`/admin/dashboard/chart/${type}`, { params: { period } }),
+    api.get(`/api/admin/dashboard/chart/${type}`, { params: { period } }),
   
   getRecentActivity: () =>
-    api.get('/admin/dashboard/activity'),
+    api.get('/api/admin/dashboard/activity'),
 }
 
 // Announcements API
 export const announcementsApi = {
   getAll: () =>
-    api.get('/announcements'),
+    api.get('/api/announcements'),
   
   create: (data: any) =>
-    api.post('/admin/announcements', data),
+    api.post('/api/admin/announcements', data),
   
   update: (id: number, data: any) =>
-    api.put(`/admin/announcements/${id}`, data),
+    api.put(`/api/admin/announcements/${id}`, data),
   
   delete: (id: number) =>
-    api.delete(`/admin/announcements/${id}`),
+    api.delete(`/api/admin/announcements/${id}`),
 }
 
 // Settings API
 export const settingsApi = {
   getAll: () =>
-    api.get('/admin/settings'),
+    api.get('/api/admin/settings'),
   
   update: (key: string, value: string) =>
-    api.put('/admin/settings', { key, value }),
+    api.put('/api/admin/settings', { key, value }),
   
   batchUpdate: (settings: Record<string, string>) =>
-    api.put('/admin/settings/batch', { settings }),
+    api.put('/api/admin/settings/batch', { settings }),
 }
 
 // Admin API (consolidated)
@@ -321,6 +327,6 @@ export const adminApi = {
   // Dashboard Stats
   getDashboardStats: () => dashboardApi.getStats(),
   getStats: () => dashboardApi.getStats(),
-  getRecentOrders: () => api.get('/admin/orders/recent'),
-  getRecentUsers: () => api.get('/admin/users/recent'),
+  getRecentOrders: () => api.get('/api/admin/orders/recent'),
+  getRecentUsers: () => api.get('/api/admin/users/recent'),
 }
