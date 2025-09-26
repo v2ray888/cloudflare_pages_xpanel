@@ -73,7 +73,13 @@ cp .env.example .env
 vim .env
 ```
 
-### 4. 数据库初始化
+### 4. 生成安全密钥
+```bash
+# 生成JWT_SECRET和PAYMENT_SECRET
+node scripts/generate-secrets.js
+```
+
+### 5. 数据库初始化
 ```bash
 # 创建 D1 数据库
 npx wrangler d1 create xpanel-db
@@ -85,7 +91,7 @@ npx wrangler d1 execute xpanel-db --file=./database/schema.sql
 npx wrangler d1 execute xpanel-db --file=./database/seed.sql
 ```
 
-### 5. 本地开发
+### 6. 本地开发
 ```bash
 # 启动前端开发服务器
 npm run dev
@@ -94,7 +100,7 @@ npm run dev
 npm run dev:api
 ```
 
-### 6. 部署到 Cloudflare
+### 7. 部署到 Cloudflare
 ```bash
 # 部署 Workers API
 npm run deploy:api
@@ -288,6 +294,16 @@ vars = {
   PAYMENT_SECRET = "your-secure-payment-secret" 
 }
 ```
+
+在 Cloudflare Dashboard 中设置环境变量：
+1. 登录 Cloudflare Dashboard
+2. 进入 Workers & Pages
+3. 选择您的项目
+4. 点击 Settings -> Environment variables
+5. 添加以下变量：
+   - `JWT_SECRET`: [您的JWT密钥]
+   - `PAYMENT_SECRET`: [您的支付密钥]
+   - `ENVIRONMENT`: production
 
 ### 域名配置
 1. 添加自定义域名
