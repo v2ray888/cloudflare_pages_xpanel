@@ -1,0 +1,209 @@
+import { Hono } from 'hono'
+import { HTTPException } from 'hono/http-exception'
+import bcrypt from 'bcryptjs'
+import { z } from 'zod'
+
+type Bindings = {
+  DB: D1Database
+}
+
+const app = new Hono<{ Bindings: Bindings }>()
+
+const updateProfileSchema = z.object({
+  username: z.string().min(2, '用户名至少2个字符').optional(),
+  phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入有效的手机号').optional().or(z.literal('')),
+})
+
+const changePasswordSchema = z.object({
+  current_password: z.string().min(1, '请输入当前密码'),
+  new_password: z.string().min(6, '新密码至少6位'),
+})
+
+// Get current user profile
+app.get('/profile', async (c) => {
+  try {
+    const payload = c.get('jwtPayload')
+    
+    const user = await c.env.DB.prepare(`
+      SELECT id, email, username, phone, referral_code, status, role, 
+             balance, commission_balance, created_at, last_login_at
+      FROM users WHERE id = ?
+    `).bind(payload.id).first()
+
+    if (!user) {
+      throw new HTTPException(404, { message: '用户不存在' })
+    }
+
+    return c.json({
+      success: true,
+      data: user,
+    })
+  } catch (error) {
+    console.error('Get profile error:', error)
+    throw new HTTPException(500, { message: '获取用户信息失败' })
+  }
+})
+
+// Update user profile
+app.put('/profile', async (c) => {
+  try {
+    const payload = c.get('jwtPayload')
+    const body = await c.req.json()
+    const { username, phone } = updateProfileSchema.parse(body)
+
+    const updates = []
+    const values = []
+
+    if (username !== undefined) {
+      updates.push('username = ?')
+      values.push(username)
+    }
+
+    if (phone !== undefined) {
+      updates.push('phone = ?')
+      values.push(phone || null)
+    }
+
+    if (updates.length === 0) {
+      throw new HTTPException(400, { message: '没有需要更新的字段' })
+    }
+
+    updates.push('updated_at = datetime("now")')
+    values.push(payload.id)
+
+    await c.env.DB.prepare(`
+      UPDATE users SET ${updates.join(', ')} WHERE id = ?
+    `).bind(...values).run()
+
+    // Get updated user
+    const user = await c.env.DB.prepare(`
+      SELECT id, email, username, phone, referral_code, status, role, 
+             balance, commission_balance, created_at, last_login_at
+      FROM users WHERE id = ?
+    `).bind(payload.id).first()
+
+    return c.json({
+      success: true,
+      message: '更新成功',
+      data: user,
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new HTTPException(400, { message: error.errors[0].message })
+    }
+    console.error('Update profile error:', error)
+    throw new HTTPException(500, { message: '更新失败' })
+  }
+})
+
+// Change password
+app.put('/password', async (c) => {
+  try {
+    const payload = c.get('jwtPayload')
+    const body = await c.req.json()
+    const { current_password, new_password } = changePasswordSchema.parse(body)
+
+    // Get current user
+    const user = await c.env.DB.prepare(
+      'SELECT password FROM users WHERE id = ?'
+    ).bind(payload.id).first()
+
+    if (!user) {
+      throw new HTTPException(404, { message: '用户不存在' })
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(current_password, user.password)
+    if (!isValidPassword) {
+      throw new HTTPException(400, { message: '当前密码错误' })
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(new_password, 10)
+
+    // Update password
+    await c.env.DB.prepare(`
+      UPDATE users SET password = ?, updated_at = datetime('now') WHERE id = ?
+    `).bind(hashedPassword, payload.id).run()
+
+    return c.json({
+      success: true,
+      message: '密码修改成功',
+    })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new HTTPException(400, { message: error.errors[0].message })
+    }
+    console.error('Change password error:', error)
+    throw new HTTPException(500, { message: '密码修改失败' })
+  }
+})
+
+// Get user subscription
+app.get('/subscription', async (c) => {
+  try {
+    const payload = c.get('jwtPayload')
+    
+    const subscription = await c.env.DB.prepare(`
+      SELECT s.*, p.name as plan_name, p.traffic_gb, p.device_limit
+      FROM subscriptions s
+      LEFT JOIN plans p ON s.plan_id = p.id
+      WHERE s.user_id = ? AND s.status = 1
+      ORDER BY s.expires_at DESC
+      LIMIT 1
+    `).bind(payload.id).first()
+
+    return c.json({
+      success: true,
+      data: subscription,
+    })
+  } catch (error) {
+    console.error('Get subscription error:', error)
+    throw new HTTPException(500, { message: '获取订阅信息失败' })
+  }
+})
+
+// Get user orders
+app.get('/orders', async (c) => {
+  try {
+    const payload = c.get('jwtPayload')
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '10')
+    const status = c.req.query('status')
+    const offset = (page - 1) * limit
+
+    let whereClause = 'WHERE o.user_id = ?'
+    const params = [payload.id]
+
+    if (status !== undefined && status !== '') {
+      whereClause += ' AND o.status = ?'
+      params.push(parseInt(status))
+    }
+
+    const orders = await c.env.DB.prepare(`
+      SELECT o.*, p.name as plan_name
+      FROM orders o
+      LEFT JOIN plans p ON o.plan_id = p.id
+      ${whereClause}
+      ORDER BY o.created_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(...params, limit, offset).all()
+
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as total FROM orders o ${whereClause}
+    `).bind(...params).first()
+
+    return c.json({
+      success: true,
+      data: orders.results,
+      total: countResult.total,
+      page,
+      limit,
+    })
+  } catch (error) {
+    console.error('Get orders error:', error)
+    throw new HTTPException(500, { message: '获取订单失败' })
+  }
+})
+
+export { app as userRoutes }
