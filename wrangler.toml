@@ -10,10 +10,10 @@ binding = "DB"
 database_name = "vpn-xpanel-db"
 database_id = "your-d1-database-id"
 
-[env.development]
-vars = { ENVIRONMENT = "development" }
+[env.preview]
+vars = { ENVIRONMENT = "preview" }
 
-[[env.development.d1_databases]]
+[[env.preview.d1_databases]]
 binding = "DB"
 database_name = "vpn-xpanel-db-dev"
 database_id = "your-d1-database-dev-id"
