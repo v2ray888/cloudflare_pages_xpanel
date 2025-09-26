@@ -7,9 +7,7 @@ import {
   Package, 
   Plus, 
   Edit, 
-  Trash2, 
-  Eye,
-  DollarSign,
+  Trash2,
   Calendar,
   HardDrive,
   Smartphone

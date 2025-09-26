@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { 
   ShoppingBag, 
-  Calendar, 
   CreditCard, 
   RefreshCw,
   Eye,
@@ -10,7 +9,7 @@ import {
   Filter
 } from 'lucide-react'
 import { ordersApi } from '@/lib/api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
@@ -45,7 +44,7 @@ export default function OrdersPage() {
     setShowOrderModal(true)
   }
 
-  const handlePayOrder = (order: any) => {
+  const handlePayOrder = (order: Order) => {
     // TODO: Implement payment logic
     window.open(`/pay/${order.id}`, '_blank')
   }
@@ -113,7 +112,7 @@ export default function OrdersPage() {
       {/* Orders List */}
       {orders.length > 0 ? (
         <div className="space-y-4">
-          {orders.map((order) => (
+          {orders.map((order: Order) => (
             <Card key={order.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">

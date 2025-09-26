@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Shield, Zap, Globe, Users, Star, Check } from 'lucide-react'
+import { ArrowRight, Shield, Zap, Globe, Users, Star } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 

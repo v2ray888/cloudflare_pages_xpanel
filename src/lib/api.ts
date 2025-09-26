@@ -148,6 +148,8 @@ export const ordersApi = {
 export const paymentApi = {
   createPayment: (data: any) => api.post('/payments', data),
   getPaymentStatus: (id: string) => api.get(`/payments/${id}/status`),
+  getPaymentMethods: () => api.get('/payments/methods'),
+  processPayment: (data: any) => api.post('/payments/process', data),
 }
 
 // Servers API
@@ -317,4 +319,7 @@ export const adminApi = {
   
   // Dashboard Stats
   getDashboardStats: () => dashboardApi.getStats(),
+  getStats: () => dashboardApi.getStats(),
+  getRecentOrders: () => api.get('/admin/orders/recent'),
+  getRecentUsers: () => api.get('/admin/users/recent'),
 }

@@ -4,8 +4,7 @@ import {
   Server, 
   Users, 
   ShoppingBag, 
-  TrendingUp, 
-  Calendar,
+  TrendingUp,
   Wifi,
   Clock
 } from 'lucide-react'

@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { toast } from 'react-hot-toast'
+
 
 const registerSchema = z.object({
   email: z.string().email('请输入有效的邮箱地址'),

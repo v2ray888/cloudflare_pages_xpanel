@@ -6,9 +6,7 @@ import {
   TrendingUp,
   Server,
   Gift,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight
+  ArrowUpRight
 } from 'lucide-react'
 import { adminApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'

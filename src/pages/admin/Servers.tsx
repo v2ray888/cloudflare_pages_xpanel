@@ -7,11 +7,8 @@ import {
   Server, 
   Plus, 
   Edit, 
-  Trash2, 
-  Eye,
-  Globe,
-  Activity,
-  Users
+  Trash2,
+  Globe
 } from 'lucide-react'
 import { adminApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'

@@ -8,8 +8,7 @@ import {
   Copy, 
   TrendingUp,
   Calendar,
-  Gift,
-  ExternalLink
+  Gift
 } from 'lucide-react'
 import { referralApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'

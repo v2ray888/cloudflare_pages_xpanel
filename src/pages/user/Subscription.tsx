@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { Modal } from '@/components/ui/Modal'
-import { formatCurrency, formatBytes, formatDate, calculateDaysRemaining, calculateUsagePercentage } from '@/lib/utils'
+import { formatBytes, formatDate, calculateDaysRemaining, calculateUsagePercentage } from '@/lib/utils'
 import { UserSubscription } from '@/types'
 
 export default function SubscriptionPage() {

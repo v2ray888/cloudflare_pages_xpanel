@@ -3,13 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
   Users, 
   Search, 
-  Filter, 
-  MoreHorizontal,
+  Filter,
   UserCheck,
   UserX,
-  Eye,
-  Edit,
-  Trash2
+  Eye
 } from 'lucide-react'
 import { adminApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'

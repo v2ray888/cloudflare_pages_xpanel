@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+
 import { Link } from 'react-router-dom'
 import { Check, Star, Zap } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -14,7 +14,7 @@ import { toast } from 'react-hot-toast'
 
 export default function PlansPage() {
   const { user } = useAuth()
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
+
 
   const { data: plans, isLoading, error } = useQuery({
     queryKey: ['plans'],
@@ -29,7 +29,7 @@ export default function PlansPage() {
       toast.error('请先登录')
       return
     }
-    setSelectedPlan(plan)
+    // Plan selected
     // 这里可以跳转到支付页面或打开支付模态框
     toast.success(`已选择 ${plan.name}`)
   }

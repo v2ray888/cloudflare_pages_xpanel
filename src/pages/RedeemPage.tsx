@@ -9,7 +9,7 @@ import { redemptionApi } from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+
 import { toast } from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 

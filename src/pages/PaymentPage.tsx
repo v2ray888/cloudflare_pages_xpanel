@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { 
@@ -27,7 +27,7 @@ export default function PaymentPage() {
   const { data: order, isLoading: orderLoading } = useQuery({
     queryKey: ['order', orderId],
     queryFn: async () => {
-      const response = await ordersApi.getOrder(orderId!)
+      const response = await ordersApi.getOrder(parseInt(orderId!))
       return response.data.data
     },
     enabled: !!orderId,

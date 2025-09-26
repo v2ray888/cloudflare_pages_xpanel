@@ -2,11 +2,9 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { 
   User, 
-  Mail, 
-  Phone, 
   Lock, 
   Save, 
   Eye, 
@@ -44,7 +42,7 @@ export default function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const { user, updateUser } = useAuth()
-  const queryClient = useQueryClient()
+  
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),

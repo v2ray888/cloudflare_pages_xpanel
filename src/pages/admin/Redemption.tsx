@@ -7,8 +7,7 @@ import {
   Gift, 
   Plus, 
   Search, 
-  Filter, 
-  Eye,
+  Filter,
   Download,
   Copy
 } from 'lucide-react'
