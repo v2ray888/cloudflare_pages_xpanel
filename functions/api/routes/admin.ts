@@ -3,7 +3,7 @@ import { HTTPException } from 'hono/http-exception'
 import { z } from 'zod'
 
 type Bindings = {
-  DB: D1Database
+  DB: any
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -143,14 +143,15 @@ app.get('/users', async (c) => {
     const offset = (page - 1) * limit
 
     let whereClause = 'WHERE 1=1'
-    const params = []
+    const params: any[] = []
 
     if (search) {
       whereClause += ' AND (email LIKE ? OR username LIKE ?)'
-      params.push(`%${search}%`, `%${search}%`)
+      params.push(`%${search}%`)
+      params.push(`%${search}%`)
     }
 
-    if (status !== undefined && status !== '') {
+    if (status !== undefined && status !== null && status !== '') {
       whereClause += ' AND status = ?'
       params.push(parseInt(status))
     }
@@ -188,7 +189,7 @@ app.put('/users/:id/status', async (c) => {
     const body = await c.req.json()
     const { status } = body
 
-    if (![0, 1].includes(status)) {
+    if (status !== 0 && status !== 1) {
       throw new HTTPException(400, { message: '无效的状态值' })
     }
 
@@ -215,9 +216,9 @@ app.get('/orders', async (c) => {
     const offset = (page - 1) * limit
 
     let whereClause = 'WHERE 1=1'
-    const params = []
+    const params: any[] = []
 
-    if (status !== undefined && status !== '') {
+    if (status !== undefined && status !== null && status !== '') {
       whereClause += ' AND o.status = ?'
       params.push(parseInt(status))
     }
@@ -246,6 +247,216 @@ app.get('/orders', async (c) => {
   } catch (error) {
     console.error('Get orders error:', error)
     throw new HTTPException(500, { message: '获取订单列表失败' })
+  }
+})
+
+// Admin plans routes
+// Get all plans (including inactive)
+app.get('/plans', async (c) => {
+  try {
+    const plans = await c.env.DB.prepare(`
+      SELECT id, name, description, price, original_price, duration_days, traffic_gb, device_limit, 
+             features, sort_order, is_popular, is_active as status, created_at
+      FROM plans 
+      ORDER BY sort_order ASC, price ASC
+    `).all()
+
+    return c.json({
+      success: true,
+      data: plans.results.map(plan => ({
+        ...plan,
+        features: plan.features ? JSON.parse(plan.features) : [],
+      })),
+    })
+  } catch (error) {
+    console.error('Get admin plans error:', error)
+    throw new HTTPException(500, { message: '获取套餐列表失败' })
+  }
+})
+
+// Create plan
+app.post('/plans', async (c) => {
+  try {
+    const body = await c.req.json()
+    
+    const {
+      name,
+      description,
+      price,
+      original_price,
+      duration_days,
+      traffic_gb,
+      device_limit,
+      features,
+      sort_order,
+      is_popular,
+      status
+    } = body
+
+    // Simple validation
+    if (!name || !price || !duration_days || !traffic_gb) {
+      throw new HTTPException(400, { message: '套餐名称、价格、有效天数和流量是必填项' })
+    }
+
+    const featuresJson = features ? JSON.stringify(features) : '[]'
+
+    const result = await c.env.DB.prepare(`
+      INSERT INTO plans (
+        name, description, price, original_price, duration_days, traffic_gb, device_limit,
+        features, sort_order, is_popular, is_active, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(
+      name,
+      description || '',
+      price,
+      original_price || price,
+      duration_days,
+      traffic_gb,
+      device_limit || 3,
+      featuresJson,
+      sort_order || 0,
+      is_popular ? 1 : 0,
+      status !== undefined ? status : 1
+    ).run()
+
+    if (!result.success) {
+      throw new HTTPException(500, { message: '创建套餐失败' })
+    }
+
+    // Get created plan
+    const plan = await c.env.DB.prepare(`
+      SELECT id, name, description, price, original_price, duration_days, traffic_gb, device_limit, 
+             features, sort_order, is_popular, is_active as status, created_at
+      FROM plans 
+      WHERE id = ?
+    `).bind(result.meta.last_row_id).first()
+
+    return c.json({
+      success: true,
+      message: '套餐创建成功',
+      data: {
+        ...plan,
+        features: plan.features ? JSON.parse(plan.features) : [],
+      },
+    })
+  } catch (error) {
+    if (error instanceof HTTPException) {
+      throw error
+    }
+    console.error('Create plan error:', error)
+    throw new HTTPException(500, { message: '创建套餐失败: ' + error.message })
+  }
+})
+
+// Update plan
+app.put('/plans/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    
+    const {
+      name,
+      description,
+      price,
+      original_price,
+      duration_days,
+      traffic_gb,
+      device_limit,
+      features,
+      sort_order,
+      is_popular,
+      status
+    } = body
+
+    // Simple validation
+    if (!name || !price || !duration_days || !traffic_gb) {
+      throw new HTTPException(400, { message: '套餐名称、价格、有效天数和流量是必填项' })
+    }
+
+    const featuresJson = features ? JSON.stringify(features) : '[]'
+
+    const result = await c.env.DB.prepare(`
+      UPDATE plans SET
+        name = ?, description = ?, price = ?, original_price = ?, duration_days = ?,
+        traffic_gb = ?, device_limit = ?, features = ?, sort_order = ?,
+        is_popular = ?, is_active = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(
+      name,
+      description || '',
+      price,
+      original_price || price,
+      duration_days,
+      traffic_gb,
+      device_limit || 3,
+      featuresJson,
+      sort_order !== undefined ? sort_order : 0,
+      is_popular ? 1 : 0,
+      status !== undefined ? status : 1,
+      id
+    ).run()
+
+    if (!result.success) {
+      throw new HTTPException(500, { message: '更新套餐失败' })
+    }
+
+    // Get updated plan
+    const plan = await c.env.DB.prepare(`
+      SELECT id, name, description, price, original_price, duration_days, traffic_gb, device_limit, 
+             features, sort_order, is_popular, is_active as status, created_at
+      FROM plans 
+      WHERE id = ?
+    `).bind(id).first()
+
+    return c.json({
+      success: true,
+      message: '套餐更新成功',
+      data: {
+        ...plan,
+        features: plan.features ? JSON.parse(plan.features) : [],
+      },
+    })
+  } catch (error) {
+    if (error instanceof HTTPException) {
+      throw error
+    }
+    console.error('Update plan error:', error)
+    throw new HTTPException(500, { message: '更新套餐失败: ' + error.message })
+  }
+})
+
+// Delete plan
+app.delete('/plans/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+
+    // Check if plan has any orders
+    const orderCount = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM orders WHERE plan_id = ?'
+    ).bind(id).first()
+
+    if (orderCount.count > 0) {
+      throw new HTTPException(400, { message: '该套餐已有用户购买，无法删除' })
+    }
+
+    const result = await c.env.DB.prepare(
+      'DELETE FROM plans WHERE id = ?'
+    ).bind(id).run()
+
+    if (!result.success) {
+      throw new HTTPException(500, { message: '删除套餐失败' })
+    }
+
+    return c.json({
+      success: true,
+      message: '套餐删除成功',
+    })
+  } catch (error) {
+    if (error instanceof HTTPException) {
+      throw error
+    }
+    console.error('Delete plan error:', error)
+    throw new HTTPException(500, { message: '删除套餐失败: ' + error.message })
   }
 })
 

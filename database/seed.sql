@@ -14,7 +14,7 @@ INSERT OR REPLACE INTO system_settings (key, value, description) VALUES
 
 -- 插入默认管理员用户 (密码: admin123)
 INSERT OR REPLACE INTO users (id, email, password_hash, username, role, referral_code, created_at) VALUES
-(1, 'admin@xpanel.com', '$2b$10$rQZ8kHWKQVnFnxjibfTxHOmKt6BvQVKQVnFnxjibfTxHOmKt6BvQV', 'Admin', 1, 'ADMIN001', datetime('now'));
+(1, 'admin@xpanel.com', '$2b$10$r80kFi4KQZ9wwu3kje/aPOFgkA6yjccMdeDDfnmH2yFKwt6ipxRam', 'Admin', 1, 'ADMIN001', datetime('now'));
 
 -- 插入示例套餐
 INSERT OR REPLACE INTO plans (name, description, price, original_price, duration_days, traffic_gb, device_limit, features, sort_order, is_popular) VALUES
