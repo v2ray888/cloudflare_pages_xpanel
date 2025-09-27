@@ -1,66 +1,93 @@
-# 🔧 部署问题修复指南
+# Cloudflare Pages 部署修复指南
 
-## 🚨 当前问题
-Cloudflare Pages仍然在使用旧的commit，没有获取到我们修复后的 `wrangler.toml` 文件。
+## 问题分析
 
-## 📊 问题分析
+您遇到的 405 Method Not Allowed 错误表明您的 API 请求没有被正确路由到 Cloudflare Functions。这通常是由于以下原因之一：
+
+1. Functions 没有正确部署
+2. 路由配置不正确
+3. 项目结构不符合 Cloudflare Pages 要求
+
+## 解决方案
+
+### 1. 确保正确的项目结构
+
+确保您的项目结构如下：
 ```
-部署日志显示的commit: d80842c (旧版本)
-实际最新commit: bec667d (已修复版本)
-```
-
-## ✅ 解决方案
-
-### 方法1：在Cloudflare Pages中手动重新部署
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/pages)
-2. 进入您的 `xpanel` 项目
-3. 在 **"Deployments"** 标签页
-4. 点击 **"Retry deployment"** 或 **"Create deployment"**
-5. 确保选择 `main` 分支的最新commit
-
-### 方法2：强制触发新的部署
-```bash
-# 创建一个空的commit来触发部署
-git commit --allow-empty -m "Trigger deployment: Force update to latest wrangler.toml"
-git push origin main
-```
-
-### 方法3：检查GitHub Webhook
-1. 在GitHub仓库设置中检查Webhooks
-2. 确保Cloudflare的webhook正常工作
-3. 如果需要，重新连接GitHub集成
-
-## 🎯 验证修复
-部署成功后，您应该看到：
-- ✅ 使用最新的commit hash (bec667d)
-- ✅ 不再出现 "development" 环境错误
-- ✅ 构建过程正常进行
-
-## 📋 当前正确的wrangler.toml配置
-```toml
-name = "cloudflare-xpanel"
-compatibility_date = "2024-01-01"
-pages_build_output_dir = "dist"
-
-[env.production]
-vars = { ENVIRONMENT = "production" }
-
-[[env.production.d1_databases]]
-binding = "DB"
-database_name = "vpn-xpanel-db"
-database_id = "your-d1-database-id"
-
-[env.preview]
-vars = { ENVIRONMENT = "preview" }
-
-[[env.preview.d1_databases]]
-binding = "DB"
-database_name = "vpn-xpanel-db-dev"
-database_id = "your-d1-database-dev-id"
+your-project/
+├── dist/                 # 构建后的前端文件
+├── functions/            # Cloudflare Functions
+│   ├── api/              # API 路由（可以有子目录）
+│   │   ├── routes/       # 路由处理器
+│   │   └── ...           # 其他 API 文件
+│   └── _worker.js        # 入口文件
+├── src/                  # 前端源码
+├── package.json
+├── wrangler.toml
+└── _routes.json          # 路由配置（可选）
 ```
 
-## 🚀 下一步
-1. 尝试上述解决方案之一
-2. 等待新的部署完成
-3. 检查部署日志确认使用了正确的commit
-4. 如果仍有问题，请提供新的部署日志
+### 2. 修复部署脚本
+
+更新您的 package.json 中的部署脚本：
+
+```json
+{
+  "scripts": {
+    "build": "tsc && vite build",
+    "deploy": "wrangler pages deploy dist",
+    "deploy:all": "npm run build && npm run deploy"
+  }
+}
+```
+
+### 3. 部署步骤
+
+1. 构建前端应用：
+   ```bash
+   npm run build
+   ```
+
+2. 部署到 Cloudflare Pages：
+   ```bash
+   npm run deploy
+   ```
+
+### 4. 验证部署
+
+部署完成后，测试以下端点：
+
+1. 测试基本 API 端点：
+   ```bash
+   curl -X GET https://your-domain.com/api/health
+   ```
+
+2. 测试管理员端点：
+   ```bash
+   curl -X POST https://your-domain.com/api/admin/plans-test
+   ```
+
+### 5. 常见问题排查
+
+如果仍然遇到 405 错误：
+
+1. 检查 Cloudflare Pages 仪表板中的 Functions 部署状态
+2. 确保 _routes.json 配置正确（如果存在）
+3. 检查 wrangler.toml 配置
+4. 确保所有 Functions 文件导出正确的处理函数
+
+### 6. 通过 GitHub 部署
+
+如果您使用 GitHub 部署：
+
+1. 确保 GitHub 仓库中的文件结构正确
+2. 在 Cloudflare Pages 仪表板中检查构建设置
+3. 确保构建命令为：`npm run build`
+4. 确保构建输出目录为：`dist`
+
+## 注意事项
+
+1. Cloudflare Pages 的 Functions 会自动包含在页面部署中
+2. 不需要单独部署 Functions
+3. 确保所有环境变量在 wrangler.toml 中正确配置
+4. 部署后可能需要几分钟时间生效

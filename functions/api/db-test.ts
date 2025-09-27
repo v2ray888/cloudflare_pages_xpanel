@@ -1,7 +1,15 @@
-export const onRequestGet = async ({ env }) => {
+interface Env {
+  DB: any;
+}
+
+interface RequestContext {
+  env: Env;
+}
+
+export const onRequestGet = async ({ env }: RequestContext) => {
   try {
     // 测试数据库连接
-    const result = await env.DB.prepare(
+    const result: any = await env.DB.prepare(
       'SELECT COUNT(*) as count FROM users'
     ).first();
     
@@ -20,10 +28,11 @@ export const onRequestGet = async ({ env }) => {
       }
     );
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({
         success: false,
-        message: 'Database connection failed: ' + error.message,
+        message: 'Database connection failed: ' + errorMessage,
         timestamp: new Date().toISOString()
       }),
       {

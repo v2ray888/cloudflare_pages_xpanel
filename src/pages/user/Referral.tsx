@@ -77,8 +77,8 @@ export default function ReferralPage() {
   }
 
   const handleWithdraw = () => {
-    // TODO: Implement withdrawal logic
-    toast('提现功能开发中', { icon: 'ℹ️' })
+    // Navigate to withdrawal page
+    window.location.href = '/user/withdraw'
   }
 
   if (statsLoading) {

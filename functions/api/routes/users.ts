@@ -38,7 +38,7 @@ app.get('/profile', async (c) => {
       success: true,
       data: user,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get profile error:', error)
     throw new HTTPException(500, { message: '获取用户信息失败' })
   }
@@ -68,12 +68,9 @@ app.put('/profile', async (c) => {
       throw new HTTPException(400, { message: '没有需要更新的字段' })
     }
 
-    updates.push('updated_at = datetime("now")')
-    values.push(payload.id)
-
     await c.env.DB.prepare(`
-      UPDATE users SET ${updates.join(', ')} WHERE id = ?
-    `).bind(...values).run()
+      UPDATE users SET ${updates.join(', ')}, updated_at = datetime("now") WHERE id = ?
+    `).bind(...values, payload.id).run()
 
     // Get updated user
     const user = await c.env.DB.prepare(`
@@ -87,7 +84,7 @@ app.put('/profile', async (c) => {
       message: '更新成功',
       data: user,
     })
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       throw new HTTPException(400, { message: error.errors[0].message })
     }
@@ -106,14 +103,14 @@ app.put('/password', async (c) => {
     // Get current user
     const user = await c.env.DB.prepare(
       'SELECT password FROM users WHERE id = ?'
-    ).bind(payload.id).first()
+    ).bind(payload.id).first<{ password: string }>()
 
     if (!user) {
       throw new HTTPException(404, { message: '用户不存在' })
     }
 
     // Verify current password
-    const isValidPassword = await bcrypt.compare(current_password, user.password)
+    const isValidPassword = await bcrypt.compare(current_password, user.password as string)
     if (!isValidPassword) {
       throw new HTTPException(400, { message: '当前密码错误' })
     }
@@ -130,7 +127,7 @@ app.put('/password', async (c) => {
       success: true,
       message: '密码修改成功',
     })
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       throw new HTTPException(400, { message: error.errors[0].message })
     }
@@ -157,7 +154,7 @@ app.get('/subscription', async (c) => {
       success: true,
       data: subscription,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get subscription error:', error)
     throw new HTTPException(500, { message: '获取订阅信息失败' })
   }
@@ -196,7 +193,7 @@ app.get('/orders', async (c) => {
     return c.json({
       success: true,
       data: orders.results,
-      total: countResult.total,
+      total: (countResult?.total as number) || 0,
       page,
       limit,
     })

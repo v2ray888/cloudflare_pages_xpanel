@@ -299,6 +299,28 @@ export const settingsApi = {
     api.put('/api/admin/settings/batch', { settings }),
 }
 
+// Withdrawal API
+export const withdrawalApi = {
+  submitWithdrawal: (data: {
+    amount: number
+    payment_method: string
+    payment_account: string
+    real_name: string
+  }) => api.post('/api/withdrawals', data),
+
+  getWithdrawals: (params?: { page?: number; limit?: number }) =>
+    api.get('/api/withdrawals', { params }),
+}
+
+// Finance API
+export const financeApi = {
+  getStats: () => api.get('/api/admin/finance/stats'),
+  getWithdrawals: (params?: { page?: number; limit?: number; status?: number }) =>
+    api.get('/api/withdrawals/admin', { params }),
+  processWithdrawal: (id: number, data: { status: number; admin_note?: string }) =>
+    api.put(`/api/withdrawals/admin/${id}`, data),
+}
+
 // Admin API (consolidated)
 export const adminApi = {
   // Users

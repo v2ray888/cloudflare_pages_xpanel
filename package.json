@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "dev:api": "wrangler dev functions/api/[[route]].ts --env production",
-    "build": "tsc && vite build",
+    "dev:api": "wrangler dev functions/_worker.js --env production",
+    "build": "tsc --project functions/tsconfig.json && vite build",
     "preview": "vite preview",
     "deploy": "wrangler pages deploy dist",
-    "deploy:api": "wrangler pages functions build functions && wrangler pages deploy dist",
-    "deploy:all": "npm run build && npm run deploy && npm run deploy:api",
+    "deploy:api": "echo \"For Cloudflare Pages, Functions are deployed with the site\"",
+    "deploy:all": "npm run build && npm run deploy",
     "db:generate": "wrangler d1 execute xpanel-db --env production --file=./database/schema.sql",
     "db:seed": "wrangler d1 execute xpanel-db --env production --file=./database/seed.sql",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -40,6 +40,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250927.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "^6.10.0",

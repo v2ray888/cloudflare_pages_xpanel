@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from './Button'
@@ -13,26 +12,14 @@ interface ModalProps {
   className?: string
 }
 
-export function Modal({
-  isOpen,
-  onClose,
-  title,
-  children,
-  size = 'md',
-  className,
+export function Modal({ 
+  isOpen, 
+  onClose, 
+  title, 
+  children, 
+  size = 'md', 
+  className 
 }: ModalProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -42,10 +29,12 @@ export function Modal({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'hidden'
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'unset'
     }
   }, [isOpen, onClose])
 
@@ -58,22 +47,20 @@ export function Modal({
     xl: 'max-w-4xl',
   }
 
-  return createPortal(
+  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div
-        className={cn(
-          'relative w-full mx-4 bg-white rounded-xl shadow-xl animate-slide-up',
-          sizeClasses[size],
-          className
-        )}
-      >
+      <div className={cn(
+        'relative bg-white rounded-xl shadow-xl w-full mx-4',
+        sizeClasses[size],
+        className
+      )}>
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between p-6 border-b">
@@ -90,11 +77,10 @@ export function Modal({
         )}
         
         {/* Content */}
-        <div className={cn('p-6', title && 'pt-0')}>
+        <div className="p-6">
           {children}
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }

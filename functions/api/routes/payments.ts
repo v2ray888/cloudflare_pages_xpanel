@@ -1,6 +1,6 @@
-import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { generateSubscriptionToken } from '../utils/generators'
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { generateSubscriptionToken } from '../../utils/generators';
 
 type Bindings = {
   DB: D1Database
@@ -24,7 +24,7 @@ app.post('/callback', async (c) => {
     // Get order
     const order = await c.env.DB.prepare(
       'SELECT * FROM orders WHERE order_no = ?'
-    ).bind(order_no).first()
+    ).bind(order_no).first<{ id: number, user_id: number, plan_id: number, order_no: string, amount: number, discount_amount: number, final_amount: number, coupon_id: number | null, status: number, payment_method: string | null, transaction_id: string | null, paid_at: string | null, created_at: string, updated_at: string | null }>()
 
     if (!order) {
       throw new HTTPException(404, { message: 'Order not found' })
@@ -37,7 +37,7 @@ app.post('/callback', async (c) => {
     if (status === 'success') {
       // Update order status
       await c.env.DB.prepare(`
-        UPDATE orders 
+        UPDATE orders
         SET status = 1, payment_method = ?, transaction_id = ?, paid_at = datetime('now')
         WHERE id = ?
       `).bind(payment_method, transaction_id, order.id).run()
@@ -45,28 +45,28 @@ app.post('/callback', async (c) => {
       // Get plan details
       const plan = await c.env.DB.prepare(
         'SELECT * FROM plans WHERE id = ?'
-      ).bind(order.plan_id).first()
+      ).bind(order.plan_id).first<{ id: number, name: string, description: string, price: number, original_price: number, duration_days: number, traffic_gb: number, device_limit: number, features: string, sort_order: number, is_popular: number, is_active: number, created_at: string }>()
 
       if (plan) {
         // Create or extend subscription
         const expiresAt = new Date()
-        expiresAt.setDate(expiresAt.getDate() + plan.duration_days)
+        expiresAt.setDate(expiresAt.getDate() + (plan.duration_days as number))
 
         // Check if user has existing subscription
         const existingSubscription = await c.env.DB.prepare(`
-          SELECT * FROM subscriptions 
+          SELECT * FROM subscriptions
           WHERE user_id = ? AND status = 1
           ORDER BY expires_at DESC
           LIMIT 1
-        `).bind(order.user_id).first()
+        `).bind(order.user_id).first<{ id: number, user_id: number, plan_id: number, token: string, expires_at: string, traffic_used: number, status: number, created_at: string, updated_at: string | null }>()
 
-        if (existingSubscription && new Date(existingSubscription.expires_at) > new Date()) {
+        if (existingSubscription && new Date(existingSubscription.expires_at as string) > new Date()) {
           // Extend existing subscription
-          const newExpiresAt = new Date(existingSubscription.expires_at)
-          newExpiresAt.setDate(newExpiresAt.getDate() + plan.duration_days)
+          const newExpiresAt = new Date(existingSubscription.expires_at as string)
+          newExpiresAt.setDate(newExpiresAt.getDate() + (plan.duration_days as number))
 
           await c.env.DB.prepare(`
-            UPDATE subscriptions 
+            UPDATE subscriptions
             SET expires_at = ?, plan_id = ?, updated_at = datetime('now')
             WHERE id = ?
           `).bind(
@@ -93,11 +93,11 @@ app.post('/callback', async (c) => {
         // Handle referral commission
         const user = await c.env.DB.prepare(
           'SELECT referrer_id FROM users WHERE id = ?'
-        ).bind(order.user_id).first()
+        ).bind(order.user_id).first<{ referrer_id: number | null }>()
 
         if (user && user.referrer_id) {
           const commissionRate = 10 // 10% commission
-          const commissionAmount = (order.final_amount * commissionRate) / 100
+          const commissionAmount = (order.final_amount as number * commissionRate) / 100
 
           // Create commission record
           await c.env.DB.prepare(`
@@ -129,7 +129,7 @@ app.post('/callback', async (c) => {
     }
 
     return c.json({ success: true, message: 'Payment processed' })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Payment callback error:', error)
     throw new HTTPException(500, { message: 'Payment processing failed' })
   }

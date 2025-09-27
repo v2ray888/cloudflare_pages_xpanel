@@ -1,13 +1,19 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { z } from 'zod'
-import { generateOrderNumber } from '../utils/generators'
 
 type Bindings = {
   DB: D1Database
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
+
+// Generate order number
+function generateOrderNumber() {
+  const timestamp = Date.now().toString().slice(-6)
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+  return `ORD${timestamp}${random}`
+}
 
 const createOrderSchema = z.object({
   plan_id: z.number().int().positive('请选择套餐'),
@@ -23,24 +29,24 @@ app.post('/', async (c) => {
 
     // Get plan
     const plan = await c.env.DB.prepare(
-      'SELECT * FROM plans WHERE id = ? AND status = 1'
-    ).bind(plan_id).first()
+      'SELECT * FROM plans WHERE id = ? AND is_active = 1'
+    ).bind(plan_id).first<{ id: number, name: string, description: string, price: number, original_price: number, duration_days: number, traffic_gb: number, device_limit: number, features: string, sort_order: number, is_popular: number, is_active: number, created_at: string }>()
 
     if (!plan) {
       throw new HTTPException(404, { message: '套餐不存在' })
     }
 
     let discount_amount = 0
-    let coupon_id = null
+    let coupon_id: number | null = null
 
     // Apply coupon if provided
     if (coupon_code) {
       const coupon = await c.env.DB.prepare(`
-        SELECT * FROM coupons 
-        WHERE code = ? AND status = 1 
+        SELECT * FROM coupons
+        WHERE code = ? AND status = 1
         AND (expires_at IS NULL OR expires_at > datetime('now'))
         AND (usage_limit IS NULL OR usage_count < usage_limit)
-      `).bind(coupon_code).first()
+      `).bind(coupon_code).first<{ id: number, code: string, discount_type: 'percentage' | 'fixed', discount_value: number, usage_limit: number | null, usage_count: number, expires_at: string | null, status: number, created_at: string }>()
 
       if (coupon) {
         if (coupon.discount_type === 'percentage') {
@@ -96,7 +102,7 @@ app.post('/', async (c) => {
       message: '订单创建成功',
       data: order,
     })
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       throw new HTTPException(400, { message: error.errors[0].message })
     }

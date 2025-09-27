@@ -32,12 +32,12 @@ app.get('/stats', async (c) => {
     return c.json({
       success: true,
       data: {
-        totalReferrals: totalReferralsResult.count || 0,
-        totalCommission: totalCommissionResult.total || 0,
-        monthlyCommission: monthlyCommissionResult.total || 0,
+        totalReferrals: (totalReferralsResult?.count as number) || 0,
+        totalCommission: (totalCommissionResult?.total as number) || 0,
+        monthlyCommission: (monthlyCommissionResult?.total as number) || 0,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get referral stats error:', error)
     throw new HTTPException(500, { message: '获取推广统计失败' })
   }
@@ -68,11 +68,11 @@ app.get('/commissions', async (c) => {
     return c.json({
       success: true,
       data: commissions.results,
-      total: countResult.total,
+      total: (countResult?.total as number) || 0,
       page,
       limit,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get referral commissions error:', error)
     throw new HTTPException(500, { message: '获取佣金记录失败' })
   }
@@ -101,11 +101,11 @@ app.get('/users', async (c) => {
     return c.json({
       success: true,
       data: users.results,
-      total: countResult.total,
+      total: (countResult?.total as number) || 0,
       page,
       limit,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get referred users error:', error)
     throw new HTTPException(500, { message: '获取推荐用户失败' })
   }
@@ -125,9 +125,9 @@ app.post('/withdraw', async (c) => {
     // Get user's commission balance
     const user = await c.env.DB.prepare(
       'SELECT commission_balance FROM users WHERE id = ?'
-    ).bind(payload.id).first()
+    ).bind(payload.id).first<{ commission_balance: number }>()
 
-    if (!user || user.commission_balance < amount) {
+    if (!user || (user.commission_balance as number) < amount) {
       throw new HTTPException(400, { message: '余额不足' })
     }
 
@@ -148,7 +148,7 @@ app.post('/withdraw', async (c) => {
       success: true,
       message: '提现申请已提交，请等待审核',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Withdraw commission error:', error)
     throw new HTTPException(500, { message: '提现申请失败' })
   }

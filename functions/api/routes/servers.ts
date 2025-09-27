@@ -42,7 +42,7 @@ app.get('/', async (c) => {
         servers: servers.results,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get servers error:', error)
     throw new HTTPException(500, { message: '获取服务器列表失败' })
   }
@@ -78,7 +78,11 @@ app.get('/:id/config', async (c) => {
     // Get user info for generating config
     const user = await c.env.DB.prepare(
       'SELECT id, email, referral_code FROM users WHERE id = ?'
-    ).bind(payload.id).first()
+    ).bind(payload.id).first<{ id: number, email: string, referral_code: string | null }>()
+
+    if (!user) {
+      throw new HTTPException(404, { message: '用户不存在' })
+    }
 
     // Generate subscription URL/config based on protocol
     let config = ''
@@ -86,16 +90,16 @@ app.get('/:id/config', async (c) => {
     
     switch (server.protocol) {
       case 'vmess':
-        config = generateVmessConfig(server, user, userToken)
+        config = generateVmessConfig(server, userToken)
         break
       case 'vless':
-        config = generateVlessConfig(server, user, userToken)
+        config = generateVlessConfig(server, userToken)
         break
       case 'trojan':
-        config = generateTrojanConfig(server, user, userToken)
+        config = generateTrojanConfig(server, userToken)
         break
       case 'shadowsocks':
-        config = generateShadowsocksConfig(server, user, userToken)
+        config = generateShadowsocksConfig(server, userToken)
         break
       default:
         throw new HTTPException(400, { message: '不支持的协议类型' })
@@ -115,14 +119,14 @@ app.get('/:id/config', async (c) => {
         subscription_url: `${c.req.url.split('/api')[0]}/api/subscription/${userToken}`,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get server config error:', error)
     throw new HTTPException(500, { message: '获取配置失败' })
   }
 })
 
 // Helper functions to generate configs
-function generateVmessConfig(server: any, user: any, token: string) {
+function generateVmessConfig(server: any, token: string) {
   const config = {
     v: '2',
     ps: server.name,
@@ -141,7 +145,7 @@ function generateVmessConfig(server: any, user: any, token: string) {
   return `vmess://${btoa(JSON.stringify(config))}`
 }
 
-function generateVlessConfig(server: any, user: any, token: string) {
+function generateVlessConfig(server: any, token: string) {
   const params = new URLSearchParams({
     type: 'tcp',
     security: server.tls ? 'tls' : 'none',
@@ -150,7 +154,7 @@ function generateVlessConfig(server: any, user: any, token: string) {
   return `vless://${token}@${server.host}:${server.port}?${params.toString()}#${encodeURIComponent(server.name)}`
 }
 
-function generateTrojanConfig(server: any, user: any, token: string) {
+function generateTrojanConfig(server: any, token: string) {
   const params = new URLSearchParams({
     type: 'tcp',
     security: 'tls',
@@ -159,7 +163,7 @@ function generateTrojanConfig(server: any, user: any, token: string) {
   return `trojan://${token}@${server.host}:${server.port}?${params.toString()}#${encodeURIComponent(server.name)}`
 }
 
-function generateShadowsocksConfig(server: any, user: any, token: string) {
+function generateShadowsocksConfig(server: any, token: string) {
   const method = 'aes-256-gcm'
   const password = token
   const userInfo = btoa(`${method}:${password}`)

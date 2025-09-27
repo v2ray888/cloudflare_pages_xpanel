@@ -45,8 +45,8 @@ export default function OrdersPage() {
   }
 
   const handlePayOrder = (order: Order) => {
-    // TODO: Implement payment logic
-    window.open(`/pay/${order.id}`, '_blank')
+    // Navigate to payment page
+    window.location.href = `/payment/${order.id}`
   }
 
   const statusOptions = [

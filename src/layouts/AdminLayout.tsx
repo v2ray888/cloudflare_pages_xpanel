@@ -9,6 +9,7 @@ import {
   Gift, 
   TrendingUp, 
   DollarSign,
+  CreditCard,
   Settings,
   Menu, 
   X,
@@ -28,6 +29,7 @@ const navigation = [
   { name: '兑换码管理', href: '/admin/redemption', icon: Gift },
   { name: '推广管理', href: '/admin/referrals', icon: TrendingUp },
   { name: '财务管理', href: '/admin/finance', icon: DollarSign },
+  { name: '提现管理', href: '/admin/withdrawals', icon: CreditCard },
   { name: '系统设置', href: '/admin/settings', icon: Settings },
 ]
 

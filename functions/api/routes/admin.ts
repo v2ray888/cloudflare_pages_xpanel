@@ -1,9 +1,8 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { z } from 'zod'
 
 type Bindings = {
-  DB: any
+  DB: D1Database
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -71,18 +70,18 @@ app.get('/stats', async (c) => {
     return c.json({
       success: true,
       data: {
-        totalUsers: totalUsersResult.count || 0,
-        newUsersToday: newUsersTodayResult.count || 0,
-        totalRevenue: totalRevenueResult.total || 0,
-        todayRevenue: todayRevenueResult.total || 0,
-        totalOrders: totalOrdersResult.count || 0,
-        todayOrders: todayOrdersResult.count || 0,
-        activeServers: activeServersResult.count || 0,
-        totalServers: totalServersResult.count || 0,
-        totalRedemptionCodes: totalRedemptionCodesResult.count || 0,
-        usedRedemptionCodes: usedRedemptionCodesResult.count || 0,
-        totalReferrals: totalReferralsResult.count || 0,
-        totalCommissions: totalCommissionsResult.total || 0,
+        totalUsers: (totalUsersResult?.count as number) || 0,
+        newUsersToday: (newUsersTodayResult?.count as number) || 0,
+        totalRevenue: (totalRevenueResult?.total as number) || 0,
+        todayRevenue: (todayRevenueResult?.total as number) || 0,
+        totalOrders: (totalOrdersResult?.count as number) || 0,
+        todayOrders: (todayOrdersResult?.count as number) || 0,
+        activeServers: (activeServersResult?.count as number) || 0,
+        totalServers: (totalServersResult?.count as number) || 0,
+        totalRedemptionCodes: (totalRedemptionCodesResult?.count as number) || 0,
+        usedRedemptionCodes: (usedRedemptionCodesResult?.count as number) || 0,
+        totalReferrals: (totalReferralsResult?.count as number) || 0,
+        totalCommissions: (totalCommissionsResult?.total as number) || 0,
       },
     })
   } catch (error) {
@@ -172,7 +171,7 @@ app.get('/users', async (c) => {
     return c.json({
       success: true,
       data: users.results,
-      total: countResult.total,
+      total: (countResult?.total as number) || 0,
       page,
       limit,
     })
@@ -240,7 +239,7 @@ app.get('/orders', async (c) => {
     return c.json({
       success: true,
       data: orders.results,
-      total: countResult.total,
+      total: (countResult?.total as number) || 0,
       page,
       limit,
     })
@@ -249,6 +248,63 @@ app.get('/orders', async (c) => {
     throw new HTTPException(500, { message: '获取订单列表失败' })
   }
 })
+
+// Get all active plans (Public)
+app.get('/plans/public', async (c) => {
+  try {
+    const plans = await c.env.DB.prepare(`
+      SELECT id, name, description, price, original_price, duration_days, traffic_gb, device_limit, 
+             features, sort_order, is_popular, is_active as status, created_at
+      FROM plans 
+      WHERE is_active = 1 
+      ORDER BY sort_order ASC, price ASC
+    `).all()
+
+    return c.json({
+      success: true,
+      data: plans.results.map((plan: any) => ({
+        ...plan,
+        features: plan?.features ? JSON.parse(plan.features as string) : [],
+      })),
+    })
+  } catch (error: any) {
+    console.error('Get public plans error:', error)
+    throw new HTTPException(500, { message: '获取套餐列表失败' })
+  }
+})
+
+// Get plan by id (Public)
+app.get('/plans/public/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    
+    const plan = await c.env.DB.prepare(`
+      SELECT id, name, description, price, original_price, duration_days, traffic_gb, device_limit, 
+             features, sort_order, is_popular, is_active as status, created_at
+      FROM plans 
+      WHERE id = ? AND is_active = 1
+    `).bind(id).first()
+
+    if (!plan) {
+      throw new HTTPException(404, { message: '套餐不存在' })
+    }
+
+    return c.json({
+      success: true,
+      data: {
+        ...plan,
+        features: plan.features ? JSON.parse(plan.features as string) : [],
+      },
+    })
+  } catch (error) {
+    if (error instanceof HTTPException) {
+      throw error
+    }
+    console.error('Get public plan by id error:', error)
+    throw new HTTPException(500, { message: '获取套餐失败' })
+  }
+})
+
 
 // Admin plans routes
 // Get all plans (including inactive)
@@ -263,9 +319,9 @@ app.get('/plans', async (c) => {
 
     return c.json({
       success: true,
-      data: plans.results.map(plan => ({
+      data: plans.results.map((plan: any) => ({
         ...plan,
-        features: plan.features ? JSON.parse(plan.features) : [],
+        features: plan.features ? JSON.parse(plan.features as string) : [],
       })),
     })
   } catch (error) {
@@ -331,15 +387,19 @@ app.post('/plans', async (c) => {
       WHERE id = ?
     `).bind(result.meta.last_row_id).first()
 
+    if (!plan) {
+      throw new HTTPException(500, { message: '创建套餐失败' })
+    }
+
     return c.json({
       success: true,
       message: '套餐创建成功',
       data: {
         ...plan,
-        features: plan.features ? JSON.parse(plan.features) : [],
+        features: plan.features ? JSON.parse(plan.features as string) : [],
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof HTTPException) {
       throw error
     }
@@ -408,15 +468,19 @@ app.put('/plans/:id', async (c) => {
       WHERE id = ?
     `).bind(id).first()
 
+    if (!plan) {
+      throw new HTTPException(404, { message: '套餐不存在' })
+    }
+
     return c.json({
       success: true,
       message: '套餐更新成功',
       data: {
         ...plan,
-        features: plan.features ? JSON.parse(plan.features) : [],
+        features: plan.features ? JSON.parse(plan.features as string) : [],
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof HTTPException) {
       throw error
     }
@@ -435,7 +499,7 @@ app.delete('/plans/:id', async (c) => {
       'SELECT COUNT(*) as count FROM orders WHERE plan_id = ?'
     ).bind(id).first()
 
-    if (orderCount.count > 0) {
+    if ((orderCount?.count as number) > 0) {
       throw new HTTPException(400, { message: '该套餐已有用户购买，无法删除' })
     }
 
@@ -451,7 +515,7 @@ app.delete('/plans/:id', async (c) => {
       success: true,
       message: '套餐删除成功',
     })
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof HTTPException) {
       throw error
     }

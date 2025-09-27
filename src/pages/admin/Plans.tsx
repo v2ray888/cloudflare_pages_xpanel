@@ -248,7 +248,7 @@ export default function AdminPlansPage() {
                 </div>
 
                 {/* Custom Features */}
-                {plan.features && plan.features.length > 0 && (
+                {plan.features && Array.isArray(plan.features) && plan.features.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-gray-900">特色功能</h4>
                     <div className="space-y-1">

@@ -18,6 +18,7 @@ import UserServers from '@/pages/user/Servers'
 import UserReferral from '@/pages/user/Referral'
 import UserOrders from '@/pages/user/Orders'
 import UserProfile from '@/pages/user/Profile'
+import UserWithdraw from '@/pages/user/Withdraw'
 
 // Admin pages
 import AdminLayout from '@/layouts/AdminLayout'
@@ -29,6 +30,7 @@ import AdminOrders from '@/pages/admin/Orders'
 import AdminRedemption from '@/pages/admin/Redemption'
 import AdminReferrals from '@/pages/admin/Referrals'
 import AdminFinance from '@/pages/admin/Finance'
+import AdminWithdrawals from '@/pages/admin/Withdrawals'
 import AdminSettings from '@/pages/admin/Settings'
 
 // Layout
@@ -62,6 +64,7 @@ function App() {
           <Route path="servers" element={<UserServers />} />
           <Route path="referral" element={<UserReferral />} />
           <Route path="orders" element={<UserOrders />} />
+          <Route path="withdraw" element={<UserWithdraw />} />
           <Route path="profile" element={<UserProfile />} />
         </Route>
 
@@ -83,6 +86,7 @@ function App() {
           <Route path="redemption" element={<AdminRedemption />} />
           <Route path="referrals" element={<AdminReferrals />} />
           <Route path="finance" element={<AdminFinance />} />
+          <Route path="withdrawals" element={<AdminWithdrawals />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Routes>

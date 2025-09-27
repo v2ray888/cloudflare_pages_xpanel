@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS plans (
     features TEXT, -- JSON格式的特性列表
     sort_order INTEGER DEFAULT 0,
     is_active TINYINT DEFAULT 1,
+    is_public TINYINT DEFAULT 1, -- 是否公开可见
     is_popular TINYINT DEFAULT 0, -- 是否推荐
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

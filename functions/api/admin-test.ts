@@ -1,6 +1,15 @@
-export const onRequestPost = async ({ request, env }) => {
+interface Env {
+  DB: any;
+}
+
+interface RequestContext {
+  request: Request;
+  env: Env;
+}
+
+export const onRequestPost = async ({ request, env }: RequestContext) => {
   try {
-    const body = await request.json();
+    const body: any = await request.json();
     const { email, password } = body;
 
     // 简单验证
@@ -20,7 +29,7 @@ export const onRequestPost = async ({ request, env }) => {
     }
 
     // 获取用户
-    const user = await env.DB.prepare(
+    const user: any = await env.DB.prepare(
       'SELECT * FROM users WHERE email = ? AND role = 1'
     ).bind(email).first();
 
@@ -67,10 +76,11 @@ export const onRequestPost = async ({ request, env }) => {
       }
     );
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({
         success: false,
-        message: '服务器错误: ' + error.message
+        message: '服务器错误: ' + errorMessage
       }),
       {
         status: 500,

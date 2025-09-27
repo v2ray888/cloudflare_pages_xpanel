@@ -1,34 +1,27 @@
-export const onRequestPost = async ({ request }) => {
-  try {
-    const body = await request.json();
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Debug endpoint working',
-        receivedBody: body,
-        timestamp: new Date().toISOString()
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: 'Debug error: ' + error.message,
-        timestamp: new Date().toISOString()
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-  }
-};
+import { Hono } from 'hono'
+
+type Env = {
+  JWT_SECRET: string
+  DB: any
+}
+
+const app = new Hono<{ Bindings: Env }>()
+
+app.get('/', async (c) => {
+  // 检查环境变量
+  const hasJwtSecret = !!c.env.JWT_SECRET
+  const hasDbBinding = !!c.env.DB
+  
+  return c.json({
+    success: true,
+    message: 'Debug info',
+    data: {
+      hasJwtSecret,
+      hasDbBinding,
+      jwtSecretLength: c.env.JWT_SECRET ? c.env.JWT_SECRET.length : 0,
+      timestamp: new Date().toISOString()
+    }
+  })
+})
+
+export default app

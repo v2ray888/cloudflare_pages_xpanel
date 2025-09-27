@@ -1,7 +1,7 @@
-import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { z } from 'zod'
-import { generateRedemptionCode } from '../utils/generators'
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { z } from 'zod';
+import { generateRedemptionCode } from '../../utils/generators';
 
 type Bindings = {
   DB: D1Database
@@ -54,7 +54,7 @@ app.post('/', async (c) => {
       message: `成功生成 ${quantity} 个兑换码`,
       data: { codes },
     })
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       throw new HTTPException(400, { message: error.errors[0].message })
     }
@@ -98,11 +98,11 @@ app.get('/', async (c) => {
     return c.json({
       success: true,
       data: codes.results,
-      total: countResult.total,
+      total: (countResult?.total as number) || 0,
       page,
       limit,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get redemption codes error:', error)
     throw new HTTPException(500, { message: '获取兑换码列表失败' })
   }
@@ -133,7 +133,7 @@ app.delete('/:id', async (c) => {
       success: true,
       message: '兑换码已删除',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete redemption code error:', error)
     throw new HTTPException(500, { message: '删除兑换码失败' })
   }

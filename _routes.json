@@ -1,11 +1,7 @@
 {
   "version": 1,
   "include": [
-    "/api/*",
-    "/test",
-    "/api-minimal/*"
+    "/api/*"
   ],
-  "exclude": [
-    "/api/__debug/*"
-  ]
+  "exclude": []
 }
