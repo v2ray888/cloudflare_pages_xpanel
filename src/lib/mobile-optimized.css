@@ -1,0 +1,283 @@
+/* 移动端优化样式 */
+
+/* 移动端基础样式 */
+@media (max-width: 768px) {
+  /* 调整页面内边距 */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* 优化卡片组件在移动端的显示 */
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  /* 优化按钮在移动端的触摸区域 */
+  .btn, button {
+    min-height: 44px; /* 符合移动端触摸标准 */
+    min-width: 44px;
+  }
+  
+  /* 优化表单元素在移动端的显示 */
+  .input, input, .textarea, textarea {
+    font-size: 16px; /* 防止iOS缩放 */
+    padding: 0.75rem;
+  }
+  
+  /* 优化导航栏在移动端的显示 */
+  .mobile-nav {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    z-index: 50;
+  }
+  
+  /* 优化模态框在移动端的显示 */
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+  
+  /* 优化表格在移动端的显示 */
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .table-mobile {
+    min-width: 100%;
+  }
+  
+  /* 优化网格布局在移动端的显示 */
+  .grid-cols-mobile-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid-cols-mobile-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  /* 优化间距 */
+  .space-y-mobile-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem;
+  }
+  
+  /* 优化字体大小 */
+  .text-mobile-sm {
+    font-size: 0.875rem;
+  }
+  
+  .text-mobile-base {
+    font-size: 1rem;
+  }
+  
+  .text-mobile-lg {
+    font-size: 1.125rem;
+  }
+  
+  .text-mobile-xl {
+    font-size: 1.25rem;
+  }
+  
+  /* 优化图标大小 */
+  .icon-mobile-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .icon-mobile-md {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .icon-mobile-lg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  /* 优化悬浮效果在触摸设备上的体验 */
+  .hover\:bg-gray-50:active {
+    background-color: rgb(249 250 251);
+  }
+  
+  /* 优化快速操作按钮 */
+  .quick-action-btn {
+    flex: 1;
+    min-height: 48px;
+    justify-content: center;
+  }
+  
+  /* 优化统计数据展示 */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .stat-label {
+    font-size: 0.875rem;
+  }
+  
+  /* 优化订阅状态显示 */
+  .subscription-card {
+    padding: 1rem;
+  }
+  
+  .subscription-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .subscription-badge {
+    align-self: flex-start;
+  }
+  
+  /* 优化订单列表 */
+  .order-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .order-details {
+    text-align: left;
+  }
+  
+  .order-amount {
+    text-align: left;
+  }
+  
+  /* 优化页脚 */
+  .footer-links {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .footer-brand {
+    text-align: center;
+  }
+  
+  .footer-cta {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .footer-cta-button {
+    width: 100%;
+  }
+  
+  /* 优化用户菜单 */
+  .user-dropdown {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 1rem 1rem 0 0;
+  }
+  
+  /* 优化浮动按钮 */
+  .floating-button {
+    position: fixed;
+    bottom: 5rem;
+    right: 1rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  .hide-on-mobile {
+    display: none;
+  }
+  
+  .text-mobile-xs {
+    font-size: 0.75rem;
+  }
+  
+  .p-mobile-3 {
+    padding: 0.75rem;
+  }
+  
+  .p-mobile-4 {
+    padding: 1rem;
+  }
+  
+  .grid-cols-mobile-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .subscription-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cta-buttons {
+    flex-direction: column;
+  }
+  
+  .cta-button {
+    width: 100%;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 移除悬停效果，使用触摸激活效果 */
+  .hover\:bg-gray-50:hover {
+    background-color: transparent;
+  }
+  
+  .hover\:bg-gray-50:active {
+    background-color: rgb(249 250 251);
+  }
+  
+  /* 增加触摸目标大小 */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* 优化滑动体验 */
+  .scroll-snap {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .scroll-snap-item {
+    scroll-snap-align: start;
+  }
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* 优化边框显示 */
+  .hairline-border {
+    position: relative;
+  }
+  
+  .hairline-border::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 200%;
+    transform: scale(0.5);
+    transform-origin: 0 0;
+    pointer-events: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 2rem;
+  }
+}

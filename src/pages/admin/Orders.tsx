@@ -26,12 +26,10 @@ export default function AdminOrdersPage() {
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['admin-orders', { page, limit, search, status: statusFilter }],
     queryFn: async () => {
-      const response = await adminApi.getOrders({ 
-        page, 
-        limit, 
-        search, 
-        status: statusFilter 
-      })
+      const params: any = { page, limit }
+      if (search) params.search = search
+      if (statusFilter !== null) params.status = statusFilter
+      const response = await adminApi.getOrders(params)
       return response.data
     },
   })
@@ -56,7 +54,7 @@ export default function AdminOrdersPage() {
     const statusMap = {
       0: { variant: 'secondary' as const, label: '待支付' },
       1: { variant: 'success' as const, label: '已支付' },
-      2: { variant: 'danger' as const, label: '已取消' },
+      2: { variant: 'default' as const, label: '已取消' },
       3: { variant: 'warning' as const, label: '已退款' },
     }
     return statusMap[status as keyof typeof statusMap] || { variant: 'secondary' as const, label: '未知' }

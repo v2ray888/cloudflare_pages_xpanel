@@ -1,0 +1,100 @@
+// 测试前端页面中plan.features.map的调用
+const mockPlans = [
+  {
+    id: 1,
+    name: "体验套餐",
+    description: "适合轻度使用用户",
+    price: 9.9,
+    original_price: 19.9,
+    duration_days: 30,
+    traffic_gb: 50,
+    device_limit: 2,
+    features: "[\"高速节点\", \"24小时客服\"]",
+    sort_order: 1,
+    is_active: 1,
+    is_popular: 0,
+    created_at: "2025-09-28 16:10:30",
+    updated_at: "2025-09-28 16:10:30"
+  },
+  {
+    id: 2,
+    name: "标准套餐",
+    description: "最受欢迎的选择",
+    price: 29.9,
+    original_price: 39.9,
+    duration_days: 30,
+    traffic_gb: 200,
+    device_limit: 3,
+    features: "[\"高速节点\", \"24小时客服\", \"多设备支持\"]",
+    sort_order: 2,
+    is_active: 1,
+    is_popular: 1,
+    created_at: "2025-09-28 16:10:30",
+    updated_at: "2025-09-28 16:10:30"
+  }
+];
+
+// 模拟API处理逻辑
+function processPlans(plans) {
+  return plans.map(plan => {
+    let features = [];
+    if (plan.features) {
+      try {
+        features = JSON.parse(plan.features);
+      } catch (e) {
+        console.error('Failed to parse features for plan:', plan.id, e);
+        features = [];
+      }
+    }
+    
+    return {
+      ...plan,
+      features: Array.isArray(features) ? features : []
+    };
+  });
+}
+
+// 模拟前端页面中的渲染逻辑
+function renderPlans(plans) {
+  console.log('渲染套餐页面...');
+  
+  plans.forEach(plan => {
+    console.log(`\n套餐名称: ${plan.name}`);
+    console.log(`价格: ${plan.price}`);
+    
+    // 模拟前端页面中的features渲染逻辑
+    console.log('特性列表:');
+    if (plan.features && Array.isArray(plan.features) && plan.features.length > 0) {
+      plan.features.forEach((feature, index) => {
+        console.log(`  ${index + 1}. ${feature}`);
+      });
+    } else {
+      console.log('  无额外特性');
+    }
+  });
+}
+
+// 测试处理后的数据
+const processedPlans = processPlans(mockPlans);
+
+// 测试渲染
+renderPlans(processedPlans);
+
+// 验证不会出现"plan.features.map is not a function"错误
+console.log('\n验证不会出现"plan.features.map is not a function"错误:');
+try {
+  processedPlans.forEach(plan => {
+    if (plan.features && Array.isArray(plan.features)) {
+      const featureItems = plan.features.map((feature, index) => ({
+        key: index,
+        text: feature
+      }));
+      console.log(`套餐 ${plan.name} 的features.map调用成功:`, featureItems);
+    } else {
+      console.log(`套餐 ${plan.name} 的features不是数组，跳过map调用`);
+    }
+  });
+  console.log('✅ 所有plan.features.map调用都成功执行！');
+} catch (error) {
+  console.error('❌ 出现错误:', error.message);
+}

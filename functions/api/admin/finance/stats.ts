@@ -26,22 +26,16 @@ export async function onRequestGet(context: any) {
     
     let decoded: any
     try {
-      // Simple JWT decode for demo (in production, use proper JWT verification)
-      const payload = token.split('.')[1]
-      const decodedPayload = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
-      decoded = JSON.parse(decodedPayload)
-      
-      // Check if token is expired
-      if (decoded.exp && decoded.exp < Date.now() / 1000) {
-        throw new Error('Token expired')
-      }
+      // Properly import and use JWT verification
+      const jwt = await import('hono/jwt')
+      decoded = await jwt.verify(token, env.JWT_SECRET)
     } catch (error) {
       return Response.json({ success: false, message: '无效的访问令牌' }, { status: 401 })
     }
 
-    // Check if user is admin
-    const user = await env.DB.prepare('SELECT * FROM users WHERE id = ? AND role = "admin"')
-      .bind(decoded.userId)
+    // Check if user is admin (role = 1 for admin)
+    const user = await env.DB.prepare('SELECT * FROM users WHERE id = ? AND role = 1')
+      .bind(decoded.id)
       .first()
 
     if (!user) {
@@ -128,25 +122,25 @@ export async function onRequestGet(context: any) {
 
     const stats = {
       revenue: {
-        total: totalRevenue.total,
-        monthly: monthlyRevenue.total,
+        total: totalRevenue?.total || 0,
+        monthly: monthlyRevenue?.total || 0,
         growth: 0 // TODO: Calculate growth percentage
       },
       withdrawals: {
-        total: totalWithdrawals.total,
-        pending: pendingWithdrawals.total
+        total: totalWithdrawals?.total || 0,
+        pending: pendingWithdrawals?.total || 0
       },
       commissions: {
-        total: totalCommissions.total
+        total: totalCommissions?.total || 0
       },
       users: {
-        total: totalUsers.total,
-        active: activeUsers.total
+        total: totalUsers?.total || 0,
+        active: activeUsers?.total || 0
       },
       orders: {
-        total: totalOrders.total
+        total: totalOrders?.total || 0
       },
-      recentTransactions: recentTransactions.results || []
+      recentTransactions: recentTransactions?.results || []
     }
 
     return Response.json({
@@ -160,11 +154,11 @@ export async function onRequestGet(context: any) {
       }
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Finance stats error:', error)
     return Response.json({
       success: false,
-      message: '获取财务统计失败'
+      message: '获取财务统计失败: ' + (error.message || '未知错误')
     }, { 
       status: 500,
       headers: {

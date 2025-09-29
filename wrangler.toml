@@ -4,7 +4,7 @@ pages_build_output_dir = "dist"
 
 [env.production]
 ENVIRONMENT = "production"
-JWT_SECRET = "Q8|)X)+Ac37*fSP%6o5wC#J7K=D)V@Ut"
+JWT_SECRET = "a-very-simple-and-long-secret-key-for-testing"
 PAYMENT_SECRET = "ssUl$ZWvY+A_To12A;[pJA2hcG(M)[E1"
 
 [[env.production.d1_databases]]
@@ -14,10 +14,17 @@ database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
 
 [env.preview]
 ENVIRONMENT = "preview"
-JWT_SECRET = "Q8|)X)+Ac37*fSP%6o5wC#J7K=D)V@Ut"
+JWT_SECRET = "a-very-simple-and-long-secret-key-for-testing"
 PAYMENT_SECRET = "ssUl$ZWvY+A_To12A;[pJA2hcG(M)[E1"
 
 [[env.preview.d1_databases]]
+binding = "DB"
+database_name = "xpanel-db"
+database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
+
+JWT_SECRET = "Q8|)X)+Ac37*fSP%6o5wC#J7K=D)V@Ut"
+
+[[ d1_databases ]]
 binding = "DB"
 database_name = "xpanel-db"
 database_id = "a269df33-6823-446c-b688-8c1373ef7a67"

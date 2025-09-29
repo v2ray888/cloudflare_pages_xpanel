@@ -228,10 +228,11 @@ export interface DashboardStats {
 
 export interface UserStats {
   subscription?: UserSubscription
-  totalOrders: number
   totalSpent: number
   referralCount: number
   commissionEarned: number
+  balance?: number
+  commissionBalance?: number
 }
 
 export const OrderStatus = {

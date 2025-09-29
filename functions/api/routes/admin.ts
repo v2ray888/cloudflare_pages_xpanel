@@ -22,12 +22,12 @@ app.get('/stats', async (c) => {
 
     // Get total revenue
     const totalRevenueResult = await c.env.DB.prepare(
-      'SELECT SUM(final_amount) as total FROM orders WHERE status = 1'
+      'SELECT COALESCE(SUM(final_amount), 0) as total FROM orders WHERE status = 1'
     ).first()
 
     // Get today revenue
     const todayRevenueResult = await c.env.DB.prepare(
-      'SELECT SUM(final_amount) as total FROM orders WHERE status = 1 AND DATE(created_at) = DATE("now")'
+      'SELECT COALESCE(SUM(final_amount), 0) as total FROM orders WHERE status = 1 AND DATE(created_at) = DATE("now")'
     ).first()
 
     // Get total orders
@@ -42,7 +42,7 @@ app.get('/stats', async (c) => {
 
     // Get server stats
     const activeServersResult = await c.env.DB.prepare(
-      'SELECT COUNT(*) as count FROM servers WHERE status = 1'
+      'SELECT COUNT(*) as count FROM servers WHERE is_active = 1'
     ).first()
 
     const totalServersResult = await c.env.DB.prepare(
@@ -64,7 +64,7 @@ app.get('/stats', async (c) => {
     ).first()
 
     const totalCommissionsResult = await c.env.DB.prepare(
-      'SELECT SUM(commission_amount) as total FROM referral_commissions WHERE status = 1'
+      'SELECT COALESCE(SUM(commission_amount), 0) as total FROM referral_commissions WHERE status = 1'
     ).first()
 
     return c.json({
@@ -72,8 +72,8 @@ app.get('/stats', async (c) => {
       data: {
         totalUsers: (totalUsersResult?.count as number) || 0,
         newUsersToday: (newUsersTodayResult?.count as number) || 0,
-        totalRevenue: (totalRevenueResult?.total as number) || 0,
-        todayRevenue: (todayRevenueResult?.total as number) || 0,
+        totalRevenue: parseFloat((totalRevenueResult?.total as string) || '0'),
+        todayRevenue: parseFloat((todayRevenueResult?.total as string) || '0'),
         totalOrders: (totalOrdersResult?.count as number) || 0,
         todayOrders: (todayOrdersResult?.count as number) || 0,
         activeServers: (activeServersResult?.count as number) || 0,
@@ -81,12 +81,12 @@ app.get('/stats', async (c) => {
         totalRedemptionCodes: (totalRedemptionCodesResult?.count as number) || 0,
         usedRedemptionCodes: (usedRedemptionCodesResult?.count as number) || 0,
         totalReferrals: (totalReferralsResult?.count as number) || 0,
-        totalCommissions: (totalCommissionsResult?.total as number) || 0,
+        totalCommissions: parseFloat((totalCommissionsResult?.total as string) || '0'),
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get admin stats error:', error)
-    throw new HTTPException(500, { message: '获取统计数据失败' })
+    throw new HTTPException(500, { message: '获取统计数据失败: ' + (error.message || '未知错误') })
   }
 })
 
@@ -246,6 +246,249 @@ app.get('/orders', async (c) => {
   } catch (error) {
     console.error('Get orders error:', error)
     throw new HTTPException(500, { message: '获取订单列表失败' })
+  }
+})
+
+// Get all servers with pagination (Admin)
+app.get('/servers', async (c) => {
+  try {
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '20')
+    const search = c.req.query('search') || ''
+    const status = c.req.query('status')
+    const offset = (page - 1) * limit
+
+    let whereClause = 'WHERE 1=1'
+    const params: any[] = []
+
+    if (search) {
+      whereClause += ' AND (name LIKE ? OR host LIKE ?)'
+      params.push(`%${search}%`)
+      params.push(`%${search}%`)
+    }
+
+    if (status !== undefined && status !== null && status !== '') {
+      whereClause += ' AND is_active = ?'
+      params.push(parseInt(status))
+    }
+
+    const servers = await c.env.DB.prepare(`
+      SELECT * FROM servers
+      ${whereClause}
+      ORDER BY sort_order ASC, id DESC
+      LIMIT ? OFFSET ?
+    `).bind(...params, limit, offset).all()
+
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as total FROM servers ${whereClause}
+    `).bind(...params).first()
+
+    return c.json({
+      success: true,
+      data: servers.results,
+      total: (countResult?.total as number) || 0,
+      page,
+      limit,
+    })
+  } catch (error) {
+    console.error('Get servers error:', error)
+    throw new HTTPException(500, { message: '获取服务器列表失败' })
+  }
+})
+
+// Create server (Admin)
+app.post('/servers', async (c) => {
+  try {
+    const body = await c.req.json()
+    
+    const {
+      name,
+      host,
+      port,
+      protocol,
+      method,
+      password,
+      uuid,
+      path,
+      country,
+      city,
+      flag_emoji,
+      load_balance,
+      max_users,
+      device_limit,
+      is_active,
+      sort_order
+    } = body
+
+    // Simple validation
+    if (!name || !host || !port || !protocol) {
+      throw new HTTPException(400, { message: '服务器名称、地址、端口和协议是必填项' })
+    }
+
+    const result = await c.env.DB.prepare(`
+      INSERT INTO servers (
+        name, host, port, protocol, method, password, uuid, path,
+        country, city, flag_emoji, load_balance, max_users, device_limit,
+        is_active, sort_order, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(
+      name,
+      host,
+      port,
+      protocol,
+      method || null,
+      password || null,
+      uuid || null,
+      path || null,
+      country || null,
+      city || null,
+      flag_emoji || null,
+      load_balance || 0,
+      max_users || 1000,
+      device_limit || 3,
+      is_active !== undefined ? is_active : 1,
+      sort_order || 0
+    ).run()
+
+    if (!result.success) {
+      throw new HTTPException(500, { message: '创建服务器失败' })
+    }
+
+    // Get created server
+    const server = await c.env.DB.prepare(
+      'SELECT * FROM servers WHERE id = ?'
+    ).bind(result.meta.last_row_id).first()
+
+    return c.json({
+      success: true,
+      message: '服务器创建成功',
+      data: server,
+    })
+  } catch (error: any) {
+    if (error instanceof HTTPException) {
+      throw error
+    }
+    console.error('Create server error:', error)
+    throw new HTTPException(500, { message: '创建服务器失败: ' + error.message })
+  }
+})
+
+// Update server (Admin)
+app.put('/servers/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    
+    const {
+      name,
+      host,
+      port,
+      protocol,
+      method,
+      password,
+      uuid,
+      path,
+      country,
+      city,
+      flag_emoji,
+      load_balance,
+      max_users,
+      device_limit,
+      is_active,
+      sort_order
+    } = body
+
+    // Simple validation
+    if (!name || !host || !port || !protocol) {
+      throw new HTTPException(400, { message: '服务器名称、地址、端口和协议是必填项' })
+    }
+
+    const result = await c.env.DB.prepare(`
+      UPDATE servers SET
+        name = ?, host = ?, port = ?, protocol = ?, method = ?, password = ?,
+        uuid = ?, path = ?, country = ?, city = ?, flag_emoji = ?,
+        load_balance = ?, max_users = ?, device_limit = ?, is_active = ?,
+        sort_order = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(
+      name,
+      host,
+      port,
+      protocol,
+      method || null,
+      password || null,
+      uuid || null,
+      path || null,
+      country || null,
+      city || null,
+      flag_emoji || null,
+      load_balance !== undefined ? load_balance : 0,
+      max_users !== undefined ? max_users : 1000,
+      device_limit !== undefined ? device_limit : 3,
+      is_active !== undefined ? is_active : 1,
+      sort_order !== undefined ? sort_order : 0,
+      id
+    ).run()
+
+    if (!result.success) {
+      throw new HTTPException(500, { message: '更新服务器失败' })
+    }
+
+    // Get updated server
+    const server = await c.env.DB.prepare(
+      'SELECT * FROM servers WHERE id = ?'
+    ).bind(id).first()
+
+    if (!server) {
+      throw new HTTPException(404, { message: '服务器不存在' })
+    }
+
+    return c.json({
+      success: true,
+      message: '服务器更新成功',
+      data: server,
+    })
+  } catch (error: any) {
+    if (error instanceof HTTPException) {
+      throw error
+    }
+    console.error('Update server error:', error)
+    throw new HTTPException(500, { message: '更新服务器失败: ' + error.message })
+  }
+})
+
+// Delete server (Admin)
+app.delete('/servers/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+
+    // Check if server exists
+    const server = await c.env.DB.prepare(
+      'SELECT id FROM servers WHERE id = ?'
+    ).bind(id).first()
+
+    if (!server) {
+      throw new HTTPException(404, { message: '服务器不存在' })
+    }
+
+    const result = await c.env.DB.prepare(
+      'DELETE FROM servers WHERE id = ?'
+    ).bind(id).run()
+
+    if (!result.success) {
+      throw new HTTPException(500, { message: '删除服务器失败' })
+    }
+
+    return c.json({
+      success: true,
+      message: '服务器删除成功',
+    })
+  } catch (error: any) {
+    if (error instanceof HTTPException) {
+      throw error
+    }
+    console.error('Delete server error:', error)
+    throw new HTTPException(500, { message: '删除服务器失败: ' + error.message })
   }
 })
 

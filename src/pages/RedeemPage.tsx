@@ -44,7 +44,11 @@ export default function RedeemPage() {
     },
     onSuccess: (data) => {
       setRedeemResult(data)
-      toast.success('兑换成功！')
+      if (data.already_redeemed) {
+        toast.success('您已兑换过此兑换码！')
+      } else {
+        toast.success('兑换成功！')
+      }
       reset()
     },
     onError: (error: any) => {
@@ -97,15 +101,15 @@ export default function RedeemPage() {
                   兑换成功！
                 </h3>
                 <p className="text-success-700 mb-4">
-                  您已成功兑换 <strong>{redeemResult.data?.plan?.name}</strong> 套餐
+                  您已成功兑换 <strong>{redeemResult.data?.plan_name}</strong> 套餐
                 </p>
                 <div className="space-y-2 text-sm text-success-600">
                   <p>有效期：{redeemResult.data?.duration_days} 天</p>
-                  <p>流量：{redeemResult.data?.plan?.traffic_gb} GB</p>
-                  <p>设备数：{redeemResult.data?.plan?.device_limit} 台</p>
+                  <p>流量：{redeemResult.data?.traffic_gb} GB</p>
+                  <p>设备数：{redeemResult.data?.device_limit} 台</p>
                 </div>
                 <div className="mt-6 space-y-2">
-                  {user ? (
+                  {user || redeemResult.data?.already_redeemed ? (
                     <Button
                       className="w-full"
                       onClick={handleGoToDashboard}
@@ -126,6 +130,7 @@ export default function RedeemPage() {
                     </>
                   )}
                 </div>
+
               </div>
             </CardContent>
           </Card>

@@ -1,0 +1,2 @@
+INSERT OR REPLACE INTO users (id, email, password_hash, username, role, referral_code, created_at) VALUES
+(1, 'admin@xpanel.com', '$2b$10$r80kFi4KQZ9wwu3kje/aPOFgkA6yjccMdeDDfnmH2yFKwt6ipxRam', 'Admin', 1, 'ADMIN001', datetime('now'));

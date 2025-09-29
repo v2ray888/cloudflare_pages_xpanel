@@ -33,7 +33,7 @@ app.post('/', async (c) => {
 
     // Create withdrawal request
     const result = await c.env.DB.prepare(`
-      INSERT INTO commission_withdrawals (
+      INSERT INTO withdrawals (
         user_id, amount, payment_method, payment_account, real_name,
         status, created_at
       ) VALUES (?, ?, ?, ?, ?, 0, datetime('now'))
@@ -79,14 +79,14 @@ app.get('/', async (c) => {
     const withdrawals = await c.env.DB.prepare(`
       SELECT id, amount, payment_method, payment_account, real_name,
              status, created_at, processed_at, admin_note
-      FROM commission_withdrawals
+      FROM withdrawals
       WHERE user_id = ?
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?
     `).bind(payload.id, limit, offset).all()
 
     const countResult = await c.env.DB.prepare(
-      'SELECT COUNT(*) as total FROM commission_withdrawals WHERE user_id = ?'
+      'SELECT COUNT(*) as total FROM withdrawals WHERE user_id = ?'
     ).bind(payload.id).first()
 
     return c.json({
@@ -120,7 +120,7 @@ app.get('/admin', async (c) => {
 
     const withdrawals = await c.env.DB.prepare(`
       SELECT w.*, u.email as user_email, u.username
-      FROM commission_withdrawals w
+      FROM withdrawals w
       LEFT JOIN users u ON w.user_id = u.id
       ${whereClause}
       ORDER BY w.created_at DESC
@@ -128,7 +128,7 @@ app.get('/admin', async (c) => {
     `).bind(...params, limit, offset).all()
 
     const countResult = await c.env.DB.prepare(`
-      SELECT COUNT(*) as total FROM commission_withdrawals w ${whereClause}
+      SELECT COUNT(*) as total FROM withdrawals w ${whereClause}
     `).bind(...params).first()
 
     return c.json({
@@ -157,7 +157,7 @@ app.put('/admin/:id', async (c) => {
 
     // Get withdrawal request
     const withdrawal = await c.env.DB.prepare(
-      'SELECT * FROM commission_withdrawals WHERE id = ?'
+      'SELECT * FROM withdrawals WHERE id = ?'
     ).bind(id).first<{
       id: number
       user_id: number
@@ -175,7 +175,7 @@ app.put('/admin/:id', async (c) => {
 
     // Update withdrawal status
     await c.env.DB.prepare(`
-      UPDATE commission_withdrawals
+      UPDATE withdrawals
       SET status = ?, admin_note = ?, processed_at = datetime('now')
       WHERE id = ?
     `).bind(status, admin_note || null, id).run()

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { UserRole } from '@/types'
 
 
 const loginSchema = z.object({
@@ -20,7 +21,7 @@ type LoginForm = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const { user, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -34,13 +35,25 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   })
 
+  // 监听用户状态变化，登录成功后自动跳转
+  useEffect(() => {
+    if (user && !isLoading) {
+      if (user.role === UserRole.ADMIN) {
+        navigate('/admin/dashboard', { replace: true })
+      } else {
+        navigate(from, { replace: true })
+      }
+    }
+  }, [user, isLoading, navigate, from])
+
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true)
     try {
       await login(data.email, data.password)
-      navigate(from, { replace: true })
+      // 跳转逻辑移到 useEffect 中处理
     } catch (error) {
       // Error is handled in AuthContext
+      console.error('Login error:', error)
     } finally {
       setIsLoading(false)
     }

@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from './Button'
 
 interface ModalProps {
   isOpen: boolean
@@ -9,20 +8,12 @@ interface ModalProps {
   title?: string
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg' | 'xl'
-  className?: string
 }
 
-export function Modal({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
-  size = 'md', 
-  className 
-}: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         onClose()
       }
     }
@@ -41,44 +32,48 @@ export function Modal({
   if (!isOpen) return null
 
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className={cn(
-        'relative bg-white rounded-xl shadow-xl w-full mx-4',
-        sizeClasses[size],
-        className
-      )}>
-        {/* Header */}
-        {title && (
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-xl font-semibold">{title}</h2>
-            <Button
-              variant="ghost"
-              size="sm"
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div 
+          className={cn(
+            'relative bg-white rounded-xl shadow-xl w-full max-h-[90vh] overflow-y-auto',
+            sizeClasses[size]
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b">
+            {title ? (
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            ) : (
+              <div />
+            )}
+            <button
               onClick={onClose}
-              className="p-2 h-auto"
+              className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-full p-1"
             >
-              <X className="w-4 h-4" />
-            </Button>
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        )}
-        
-        {/* Content */}
-        <div className="p-6">
-          {children}
+          
+          {/* Content */}
+          <div className="p-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>

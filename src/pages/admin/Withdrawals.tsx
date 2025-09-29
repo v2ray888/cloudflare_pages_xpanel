@@ -12,7 +12,7 @@ interface Withdrawal {
   id: number
   user_id: number
   user_email: string
-  user_name: string
+  username: string
   amount: number
   payment_method: string
   payment_account: string
@@ -44,7 +44,7 @@ export default function AdminWithdrawals() {
     queryFn: () => financeApi.getWithdrawals({
       page,
       limit: 20,
-      status: selectedStatus || undefined
+      status: selectedStatus !== '' ? parseInt(selectedStatus) : undefined
     })
   })
 
@@ -90,8 +90,11 @@ export default function AdminWithdrawals() {
     )
   }
 
-  const withdrawals = withdrawalsData?.data?.data?.withdrawals || []
-  const pagination = withdrawalsData?.data?.data?.pagination
+  const withdrawals = withdrawalsData?.data?.data || []
+  const pagination = {
+    currentPage: withdrawalsData?.data?.page || 1,
+    totalPages: Math.ceil((withdrawalsData?.data?.total || 0) / (withdrawalsData?.data?.limit || 20))
+  }
 
   return (
     <div className="space-y-6">
@@ -142,7 +145,7 @@ export default function AdminWithdrawals() {
                   <td className="p-4">{withdrawal.id}</td>
                   <td className="p-4">
                     <div>
-                      <div className="font-medium">{withdrawal.user_name || '未设置'}</div>
+                      <div className="font-medium">{withdrawal.username || '未设置'}</div>
                       <div className="text-sm text-gray-500">{withdrawal.user_email}</div>
                     </div>
                   </td>

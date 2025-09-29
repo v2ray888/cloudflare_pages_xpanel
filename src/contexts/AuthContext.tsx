@@ -2,11 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@/types'
 import { authApi } from '@/lib/api'
 import { toast } from 'react-hot-toast'
+import api from '@/lib/api'
 
 interface AuthContextType {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
+  adminLogin: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, username?: string, referralCode?: string) => Promise<void>
   logout: () => void
   updateUser: (userData: Partial<User>) => void
@@ -37,7 +39,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (token && savedUser) {
         try {
-          setUser(JSON.parse(savedUser))
+          const userData = JSON.parse(savedUser)
+          setUser(userData)
           // Verify token is still valid
           const response = await authApi.me()
           if (response.data.success) {
@@ -69,6 +72,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(userData)
         
         toast.success('登录成功')
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || '登录失败'
+      toast.error(message)
+      throw error
+    }
+  }
+
+  const adminLogin = async (email: string, password: string) => {
+    try {
+      const response = await api.post('/api/auth/admin-login', { email, password })
+      
+      if (response.data.success) {
+        const { user: userData, token } = response.data.data
+        
+        localStorage.setItem('auth_token', token)
+        localStorage.setItem('user', JSON.stringify(userData))
+        setUser(userData)
+        
+        toast.success('管理员登录成功')
       }
     } catch (error: any) {
       const message = error.response?.data?.message || '登录失败'
@@ -121,6 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     loading,
     login,
+    adminLogin,
     register,
     logout,
     updateUser,

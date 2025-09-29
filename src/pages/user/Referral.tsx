@@ -10,7 +10,7 @@ import {
   Calendar,
   Gift
 } from 'lucide-react'
-import { referralApi } from '@/lib/api'
+import { referralApi, usersApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -27,10 +27,11 @@ export default function ReferralPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const { user } = useAuth()
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['referral-stats'],
+  // 获取用户统计数据
+  const { data: stats } = useQuery({
+    queryKey: ['user-stats'],
     queryFn: async () => {
-      const response = await referralApi.getStats()
+      const response = await usersApi.getStats()
       return response.data.data
     },
   })
@@ -81,7 +82,7 @@ export default function ReferralPage() {
     window.location.href = '/user/withdraw'
   }
 
-  if (statsLoading) {
+  if (!stats) {
     return (
       <div className="flex items-center justify-center h-64">
         <LoadingSpinner size="lg" />
@@ -156,7 +157,7 @@ export default function ReferralPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">可提现</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(user?.commission_balance || 0)}
+                  {formatCurrency(stats?.commissionBalance || 0)}
                 </p>
               </div>
             </div>
@@ -243,7 +244,7 @@ export default function ReferralPage() {
             <div>
               <p className="text-sm text-gray-600">可提现余额</p>
               <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(user?.commission_balance || 0)}
+                {formatCurrency(stats?.commissionBalance || 0)}
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 最低提现金额：¥100
@@ -251,7 +252,7 @@ export default function ReferralPage() {
             </div>
             <Button
               onClick={handleWithdraw}
-              disabled={(user?.commission_balance || 0) < 100}
+              disabled={(stats?.commissionBalance || 0) < 100}
             >
               申请提现
             </Button>

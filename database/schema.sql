@@ -1,4 +1,4 @@
--- 用户表
+-- User table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS servers (
     load_balance INTEGER DEFAULT 0, -- 负载权重
     max_users INTEGER DEFAULT 1000, -- 最大用户数
     current_users INTEGER DEFAULT 0, -- 当前用户数
+    sort_order INTEGER DEFAULT 0, -- 排序
     is_active TINYINT DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -143,7 +144,7 @@ CREATE TABLE IF NOT EXISTS user_traffic_logs (
 );
 
 -- 系统设置表
-CREATE TABLE IF NOT EXISTS system_settings (
+CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     key VARCHAR(100) UNIQUE NOT NULL,
     value TEXT,
@@ -177,3 +178,23 @@ CREATE INDEX IF NOT EXISTS idx_redemption_codes_status ON redemption_codes(statu
 CREATE INDEX IF NOT EXISTS idx_referral_commissions_referrer_id ON referral_commissions(referrer_id);
 CREATE INDEX IF NOT EXISTS idx_user_traffic_logs_user_id ON user_traffic_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_traffic_logs_recorded_at ON user_traffic_logs(recorded_at);
+
+-- 提现申请表
+CREATE TABLE IF NOT EXISTS withdrawals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(20) NOT NULL, -- alipay, wechat, bank
+    payment_account VARCHAR(255) NOT NULL, -- 收款账户
+    real_name VARCHAR(100) NOT NULL, -- 真实姓名
+    status TINYINT DEFAULT 0, -- 0:待审核 1:已通过 2:已拒绝
+    admin_note TEXT,
+    processed_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 为提现表创建索引
+CREATE INDEX IF NOT EXISTS idx_withdrawals_user_id ON withdrawals(user_id);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON withdrawals(status);

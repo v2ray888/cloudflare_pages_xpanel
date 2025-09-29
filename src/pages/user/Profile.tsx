@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { 
   User, 
   Lock, 
@@ -43,6 +43,13 @@ export default function ProfilePage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const { user, updateUser } = useAuth()
   
+  const { data: stats } = useQuery({
+    queryKey: ['user-stats'],
+    queryFn: async () => {
+      const response = await usersApi.getStats()
+      return response.data.data
+    },
+  })
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -164,8 +171,8 @@ export default function ProfilePage() {
                   value={user?.email || ''}
                   label="邮箱地址"
                   disabled
-                  helperText="邮箱地址不可修改"
                 />
+                <p className="text-sm text-gray-500 mt-1">邮箱地址不可修改</p>
               </div>
               <div>
                 <Input
@@ -180,8 +187,8 @@ export default function ProfilePage() {
                   value={user?.referral_code || ''}
                   label="推广码"
                   disabled
-                  helperText="您的专属推广码"
                 />
+                <p className="text-sm text-gray-500 mt-1">您的专属推广码</p>
               </div>
             </div>
 
@@ -212,7 +219,7 @@ export default function ProfilePage() {
             <div className="text-center p-6 bg-primary-50 rounded-lg">
               <p className="text-sm text-primary-600 mb-2">账户余额</p>
               <p className="text-3xl font-bold text-primary-700">
-                ¥{user?.balance || 0}
+                ¥{stats?.balance || 0}
               </p>
               <Button size="sm" className="mt-4">
                 充值
@@ -221,7 +228,7 @@ export default function ProfilePage() {
             <div className="text-center p-6 bg-success-50 rounded-lg">
               <p className="text-sm text-success-600 mb-2">佣金余额</p>
               <p className="text-3xl font-bold text-success-700">
-                ¥{user?.commission_balance || 0}
+                ¥{stats?.commissionBalance || 0}
               </p>
               <Button size="sm" variant="outline" className="mt-4">
                 提现

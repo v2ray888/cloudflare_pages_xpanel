@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Mail, MessageCircle, Shield, Zap } from 'lucide-react'
+import { Mail, MessageCircle, Shield, Zap, CreditCard, Globe, Headphones } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -16,7 +17,7 @@ export function Footer() {
       description: '全球优质节点',
     },
     {
-      icon: MessageCircle,
+      icon: Headphones,
       title: '24/7客服',
       description: '全天候技术支持',
     },
@@ -48,7 +49,7 @@ export function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div key={index} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-600 rounded-lg mb-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-600 rounded-lg mb-4 mx-auto">
                   <feature.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
@@ -138,6 +139,30 @@ export function Footer() {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="border-t border-gray-800 bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="text-center md:text-left">
+              <h3 className="text-lg font-semibold mb-2">开始您的安全网络之旅</h3>
+              <p className="text-gray-400">立即注册，享受30天无理由退款保证</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <Button variant="outline" className="bg-white text-gray-900 hover:bg-gray-100 flex-1" asChild>
+                <Link to="/register">
+                  免费注册
+                </Link>
+              </Button>
+              <Button variant="outline" className="flex-1" asChild>
+                <Link to="/plans">
+                  查看套餐
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -15,10 +15,10 @@ app.get('/', async (c) => {
     // Check if user has active subscription
     const subscription = await c.env.DB.prepare(`
       SELECT s.*, p.name as plan_name
-      FROM subscriptions s
+      FROM user_subscriptions s
       LEFT JOIN plans p ON s.plan_id = p.id
-      WHERE s.user_id = ? AND s.status = 1 AND s.expires_at > datetime('now')
-      ORDER BY s.expires_at DESC
+      WHERE s.user_id = ? AND s.status = 1 AND s.end_date > datetime('now', 'localtime')
+      ORDER BY s.end_date DESC
       LIMIT 1
     `).bind(payload.id).first()
 
@@ -29,10 +29,10 @@ app.get('/', async (c) => {
     // Get available servers
     const servers = await c.env.DB.prepare(`
       SELECT id, name, host, port, protocol, country, city, 
-             load_percentage, status, created_at
+             load_balance, is_active, created_at
       FROM servers 
-      WHERE status = 1 
-      ORDER BY sort_order ASC, load_percentage ASC
+      WHERE is_active = 1 
+      ORDER BY sort_order ASC, load_balance ASC
     `).all()
 
     return c.json({
@@ -44,7 +44,7 @@ app.get('/', async (c) => {
     })
   } catch (error: any) {
     console.error('Get servers error:', error)
-    throw new HTTPException(500, { message: '获取服务器列表失败' })
+    throw new HTTPException(500, { message: '获取服务器列表失败: ' + (error.message || '未知错误') })
   }
 })
 
@@ -56,9 +56,9 @@ app.get('/:id/config', async (c) => {
     
     // Check if user has active subscription
     const subscription = await c.env.DB.prepare(`
-      SELECT * FROM subscriptions 
-      WHERE user_id = ? AND status = 1 AND expires_at > datetime('now')
-      ORDER BY expires_at DESC
+      SELECT * FROM user_subscriptions 
+      WHERE user_id = ? AND status = 1 AND end_date > datetime('now', 'localtime')
+      ORDER BY end_date DESC
       LIMIT 1
     `).bind(payload.id).first()
 
@@ -68,7 +68,7 @@ app.get('/:id/config', async (c) => {
 
     // Get server
     const server = await c.env.DB.prepare(
-      'SELECT * FROM servers WHERE id = ? AND status = 1'
+      'SELECT * FROM servers WHERE id = ? AND is_active = 1'
     ).bind(serverId).first()
 
     if (!server) {
@@ -98,6 +98,7 @@ app.get('/:id/config', async (c) => {
       case 'trojan':
         config = generateTrojanConfig(server, userToken)
         break
+      case 'ss':
       case 'shadowsocks':
         config = generateShadowsocksConfig(server, userToken)
         break
@@ -121,7 +122,7 @@ app.get('/:id/config', async (c) => {
     })
   } catch (error: any) {
     console.error('Get server config error:', error)
-    throw new HTTPException(500, { message: '获取配置失败' })
+    throw new HTTPException(500, { message: '获取配置失败: ' + (error.message || '未知错误') })
   }
 })
 
@@ -164,8 +165,8 @@ function generateTrojanConfig(server: any, token: string) {
 }
 
 function generateShadowsocksConfig(server: any, token: string) {
-  const method = 'aes-256-gcm'
-  const password = token
+  const method = server.method || 'aes-256-gcm'
+  const password = server.password || token
   const userInfo = btoa(`${method}:${password}`)
   
   return `ss://${userInfo}@${server.host}:${server.port}#${encodeURIComponent(server.name)}`

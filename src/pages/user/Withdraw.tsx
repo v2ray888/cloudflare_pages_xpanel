@@ -13,7 +13,7 @@ import {
   XCircle,
   AlertCircle
 } from 'lucide-react'
-import { withdrawalApi } from '@/lib/api'
+import { withdrawalApi, usersApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -36,6 +36,15 @@ export default function WithdrawPage() {
   const [selectedMethod, setSelectedMethod] = useState<'alipay' | 'wechat' | 'bank'>('alipay')
   const { user } = useAuth()
   const queryClient = useQueryClient()
+
+  // 获取用户统计数据
+  const { data: stats } = useQuery({
+    queryKey: ['user-stats'],
+    queryFn: async () => {
+      const response = await usersApi.getStats()
+      return response.data.data
+    },
+  })
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<WithdrawalForm>({
     resolver: zodResolver(withdrawalSchema),
@@ -70,7 +79,7 @@ export default function WithdrawPage() {
   })
 
   const onSubmit = (data: WithdrawalForm) => {
-    if ((user?.commission_balance || 0) < data.amount) {
+    if ((stats?.commissionBalance || 0) < data.amount) {
       toast.error('余额不足')
       return
     }
@@ -147,7 +156,7 @@ export default function WithdrawPage() {
                     <div>
                       <p className="text-sm text-blue-600">可提现余额</p>
                       <p className="text-2xl font-bold text-blue-900">
-                        {formatCurrency(user?.commission_balance || 0)}
+                        {formatCurrency(stats?.commissionBalance || 0)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -241,7 +250,7 @@ export default function WithdrawPage() {
                   className="w-full"
                   size="lg"
                   loading={withdrawalMutation.isPending}
-                  disabled={(user?.commission_balance || 0) < 100}
+                  disabled={(stats?.commissionBalance || 0) < 100}
                 >
                   提交申请
                 </Button>

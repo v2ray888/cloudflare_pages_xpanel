@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, User, LogOut, Settings, Shield } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
-
 import { UserRole } from '@/types'
 
 export function Header() {
@@ -155,13 +154,11 @@ export function Header() {
                   >
                     登录
                   </Link>
-                  <Link
-                    to="/register"
-                    className="block px-3 py-2 text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    注册
-                  </Link>
+                  <Button size="sm" className="w-full" asChild>
+                    <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                      注册
+                    </Link>
+                  </Button>
                 </div>
               )}
             </div>

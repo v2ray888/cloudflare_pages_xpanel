@@ -22,7 +22,7 @@ const jsonError = (message: string, status: number = 500) => {
     status,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*', // In production, be more specific
+      'Access-Control-Allow-Origin': '*', // 在开发环境中允许所有源
     },
   });
 };
@@ -31,16 +31,25 @@ const jsonError = (message: string, status: number = 500) => {
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, next } = context;
   const url = new URL(request.url);
+  const origin = request.headers.get('Origin');
 
   // --- CORS Preflight for all routes ---
   // Handle all OPTIONS requests at the middleware level for simplicity.
   if (request.method === 'OPTIONS') {
+    // 在开发环境中允许所有源，在生产环境中可以更严格
+    const isDev = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.pages.dev')
+    );
+    
     return new Response(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin': '*', // In production, be more specific
+        'Access-Control-Allow-Origin': isDev ? origin : '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400', // 24 hours
       },
     });
   }
@@ -71,7 +80,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       }
 
       // If all checks pass, proceed to the actual function
-      return await next();
+      const response = await next();
+      
+      // Add CORS headers to the response
+      if (origin) {
+        response.headers.set('Access-Control-Allow-Origin', origin);
+      }
+      
+      return response;
 
     } catch (error) {
       // This catches errors from `verify` (e.g., invalid signature)
@@ -84,6 +100,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // For now, we'll just let them pass for simplicity, but you can implement
   // a similar JWT check without the role requirement.
 
-  // If the route is not an admin route, just proceed
-  return await next();
+  // For all other routes, proceed and add CORS headers
+  const response = await next();
+  
+  // Add CORS headers to the response
+  if (origin) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+  }
+  
+  return response;
 };

@@ -24,19 +24,19 @@ export default function AdminFinancePage() {
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false)
   const queryClient = useQueryClient()
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ['finance-stats'],
     queryFn: async () => {
       const response = await financeApi.getStats()
-      return response.data.data
+      return response.data
     },
   })
 
-  const { data: withdrawals, isLoading: withdrawalsLoading } = useQuery({
+  const { data: withdrawals, isLoading: withdrawalsLoading, error: withdrawalsError } = useQuery({
     queryKey: ['admin-withdrawals'],
     queryFn: async () => {
       const response = await financeApi.getWithdrawals()
-      return response.data.data
+      return response.data
     },
   })
 
@@ -122,7 +122,7 @@ export default function AdminFinancePage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">总收入</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(stats?.totalRevenue || 0)}
+                  {formatCurrency(stats?.data?.revenue?.total || 0)}
                 </p>
               </div>
             </div>
@@ -138,7 +138,7 @@ export default function AdminFinancePage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">本月收入</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(stats?.monthlyRevenue || 0)}
+                  {formatCurrency(stats?.data?.revenue?.monthly || 0)}
                 </p>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function AdminFinancePage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">待处理提现</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats?.pendingWithdrawals || 0}
+                  {stats?.data?.withdrawals?.pending || 0}
                 </p>
               </div>
             </div>
@@ -170,7 +170,7 @@ export default function AdminFinancePage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">总提现金额</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(stats?.totalWithdrawals || 0)}
+                  {formatCurrency(stats?.data?.withdrawals?.total || 0)}
                 </p>
               </div>
             </div>
@@ -191,9 +191,9 @@ export default function AdminFinancePage() {
             <div className="flex items-center justify-center h-32">
               <LoadingSpinner />
             </div>
-          ) : withdrawals && withdrawals.length > 0 ? (
+          ) : withdrawals && withdrawals.data && withdrawals.data.length > 0 ? (
             <div className="space-y-4">
-              {withdrawals.map((withdrawal: any) => (
+              {withdrawals.data.map((withdrawal: any) => (
                 <div key={withdrawal.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">

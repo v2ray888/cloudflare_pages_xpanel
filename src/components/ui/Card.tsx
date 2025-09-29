@@ -3,13 +3,32 @@ import { cn } from '@/lib/utils'
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error'
+  fullWidth?: boolean
 }
 
-export function Card({ className, children, ...props }: CardProps) {
+export function Card({ 
+  className, 
+  children, 
+  variant = 'default',
+  fullWidth = false,
+  ...props 
+}: CardProps) {
+  const variantClasses = {
+    default: 'bg-white border-gray-200',
+    primary: 'bg-primary-50 border-primary-200',
+    secondary: 'bg-secondary-50 border-secondary-200',
+    success: 'bg-green-50 border-green-200',
+    warning: 'bg-yellow-50 border-yellow-200',
+    error: 'bg-red-50 border-red-200',
+  }
+
   return (
     <div
       className={cn(
-        'rounded-xl border bg-card text-card-foreground shadow-sm',
+        'rounded-xl border shadow-sm transition-shadow hover:shadow-md',
+        variantClasses[variant],
+        fullWidth && 'w-full',
         className
       )}
       {...props}

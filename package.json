@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "dev:api": "wrangler dev functions/_worker.js --env production",
+    "dev:api": "wrangler dev functions/_worker.ts --env production",
     "build": "tsc --project functions/tsconfig.json && vite build",
     "preview": "vite preview",
     "deploy": "wrangler pages deploy dist",
@@ -22,12 +22,14 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/js-cookie": "^3.0.6",
     "@types/qrcode": "^1.5.5",
-    "axios": "^1.6.2",
+    "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.4.1",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
     "hono": "^4.9.8",
     "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.294.0",
     "qrcode": "^1.5.3",
     "react": "^18.2.0",
@@ -37,6 +39,7 @@
     "react-router-dom": "^6.20.1",
     "recharts": "^2.8.0",
     "tailwind-merge": "^2.0.0",
+    "toml": "^3.0.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

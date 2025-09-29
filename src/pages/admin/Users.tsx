@@ -4,9 +4,10 @@ import {
   Users, 
   Search, 
   Filter,
+  Eye,
+  Edit,
   UserCheck,
-  UserX,
-  Eye
+  UserX
 } from 'lucide-react'
 import { adminApi } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -15,13 +16,13 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { Modal } from '@/components/ui/Modal'
-import { formatDate, formatCurrency } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<number | null>(null)
+  const [statusFilter, setStatusFilter] = useState<number | ''>('')
   const [selectedUser, setSelectedUser] = useState<any>(null)
   const [showUserModal, setShowUserModal] = useState(false)
   const limit = 20
@@ -31,19 +32,17 @@ export default function AdminUsersPage() {
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['admin-users', { page, limit, search, status: statusFilter }],
     queryFn: async () => {
-      const response = await adminApi.getUsers({ 
-        page, 
-        limit, 
-        search, 
-        status: statusFilter 
-      })
+      const params: any = { page, limit }
+      if (search) params.search = search
+      if (statusFilter !== '') params.status = statusFilter
+      const response = await adminApi.getUsers(params)
       return response.data
     },
   })
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: number, status: number }) => {
-      const response = await adminApi.updateUserStatus(userId, status)
+    mutationFn: async ({ id, status }: { id: number; status: number }) => {
+      const response = await adminApi.updateUserStatus(id, status)
       return response.data
     },
     onSuccess: () => {
@@ -59,21 +58,37 @@ export default function AdminUsersPage() {
   const users = usersData?.data || []
   const totalPages = Math.ceil((usersData?.total || 0) / limit)
 
-  const handleStatusChange = (userId: number, currentStatus: number) => {
-    const newStatus = currentStatus === 1 ? 0 : 1
-    updateStatusMutation.mutate({ userId, status: newStatus })
-  }
-
   const handleViewUser = (user: any) => {
     setSelectedUser(user)
     setShowUserModal(true)
   }
 
+  const handleToggleUserStatus = (id: number, currentStatus: number) => {
+    const newStatus = currentStatus === 1 ? 0 : 1
+    if (confirm(`确定要${newStatus === 1 ? '启用' : '禁用'}这个用户吗？`)) {
+      updateStatusMutation.mutate({ id, status: newStatus })
+    }
+  }
+
   const statusOptions = [
-    { value: null, label: '全部状态' },
+    { value: '', label: '全部状态' },
     { value: 1, label: '正常' },
-    { value: 0, label: '已禁用' },
+    { value: 0, label: '禁用' },
   ]
+
+  const getRoleBadge = (role: number) => {
+    if (role === 1) {
+      return { variant: 'success' as const, label: '管理员' }
+    }
+    return { variant: 'default' as const, label: '普通用户' }
+  }
+
+  const getStatusBadge = (status: number) => {
+    if (status === 1) {
+      return { variant: 'success' as const, label: '正常' }
+    }
+    return { variant: 'secondary' as const, label: '禁用' }
+  }
 
   return (
     <div className="space-y-6">
@@ -107,7 +122,7 @@ export default function AdminUsersPage() {
                     size="sm"
                     variant={statusFilter === option.value ? 'primary' : 'outline'}
                     onClick={() => {
-                      setStatusFilter(option.value)
+                      setStatusFilter(option.value === '' ? '' : Number(option.value))
                       setPage(1)
                     }}
                   >
@@ -143,9 +158,9 @@ export default function AdminUsersPage() {
               {/* Table Header */}
               <div className="hidden md:grid md:grid-cols-6 gap-4 p-4 bg-gray-50 rounded-lg text-sm font-medium text-gray-700">
                 <div>用户信息</div>
-                <div>状态</div>
+                <div>角色</div>
                 <div>余额</div>
-                <div>推广码</div>
+                <div>状态</div>
                 <div>注册时间</div>
                 <div>操作</div>
               </div>
@@ -154,41 +169,36 @@ export default function AdminUsersPage() {
               {users.map((user: any) => (
                 <div key={user.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-4 border rounded-lg hover:bg-gray-50">
                   <div className="space-y-1">
-                    <p className="font-medium text-gray-900">
+                    <p className="text-sm font-medium">
                       {user.username || '未设置'}
                     </p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                    {user.phone && (
-                      <p className="text-sm text-gray-500">{user.phone}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center">
-                    <Badge
-                      variant={user.status === 1 ? 'success' : 'secondary'}
-                    >
-                      {user.status === 1 ? '正常' : '已禁用'}
-                    </Badge>
-                    {user.role === 1 && (
-                      <Badge variant="primary" className="ml-2">
-                        管理员
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-sm">
-                      余额: {formatCurrency(user.balance || 0)}
-                    </p>
                     <p className="text-sm text-gray-600">
-                      佣金: {formatCurrency(user.commission_balance || 0)}
+                      {user.email}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      ID: {user.id}
                     </p>
                   </div>
 
                   <div>
-                    <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                      {user.referral_code}
-                    </code>
+                    <Badge variant={getRoleBadge(user.role).variant}>
+                      {getRoleBadge(user.role).label}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">
+                      ¥{user.balance}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      佣金: ¥{user.commission_balance}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Badge variant={getStatusBadge(user.status).variant}>
+                      {getStatusBadge(user.status).label}
+                    </Badge>
                   </div>
 
                   <div className="text-sm text-gray-600">
@@ -205,9 +215,8 @@ export default function AdminUsersPage() {
                     </Button>
                     <Button
                       size="sm"
-                      variant={user.status === 1 ? 'danger' : 'success'}
-                      onClick={() => handleStatusChange(user.id, user.status)}
-                      loading={updateStatusMutation.isPending}
+                      variant="outline"
+                      onClick={() => handleToggleUserStatus(user.id, user.status)}
                     >
                       {user.status === 1 ? (
                         <UserX className="w-4 h-4" />
@@ -265,7 +274,7 @@ export default function AdminUsersPage() {
                 暂无用户数据
               </h3>
               <p className="text-gray-600">
-                {search || statusFilter !== null ? '没有找到匹配的用户' : '系统中还没有用户'}
+                {search || statusFilter !== '' ? '没有找到匹配的用户' : '系统中还没有用户'}
               </p>
             </div>
           )}
@@ -281,13 +290,13 @@ export default function AdminUsersPage() {
       >
         {selectedUser && (
           <div className="space-y-6">
-            {/* Basic Info */}
+            {/* User Info */}
             <div>
               <h4 className="font-medium text-gray-900 mb-4">基本信息</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">用户ID:</span>
-                  <span className="ml-2 font-mono">{selectedUser.id}</span>
+                  <span className="ml-2">{selectedUser.id}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">邮箱:</span>
@@ -303,78 +312,63 @@ export default function AdminUsersPage() {
                 </div>
                 <div>
                   <span className="text-gray-600">推广码:</span>
-                  <code className="ml-2 bg-gray-100 px-2 py-1 rounded text-xs">
-                    {selectedUser.referral_code}
-                  </code>
+                  <span className="ml-2">{selectedUser.referral_code || '未设置'}</span>
                 </div>
-                <div>
-                  <span className="text-gray-600">角色:</span>
-                  <Badge variant={selectedUser.role === 1 ? 'primary' : 'secondary'} className="ml-2">
-                    {selectedUser.role === 1 ? '管理员' : '普通用户'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* Account Info */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">账户信息</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">账户余额:</span>
-                  <span className="ml-2 font-medium text-green-600">
-                    {formatCurrency(selectedUser.balance || 0)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">佣金余额:</span>
-                  <span className="ml-2 font-medium text-blue-600">
-                    {formatCurrency(selectedUser.commission_balance || 0)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">账户状态:</span>
-                  <Badge 
-                    variant={selectedUser.status === 1 ? 'success' : 'secondary'}
-                    className="ml-2"
-                  >
-                    {selectedUser.status === 1 ? '正常' : '已禁用'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* Time Info */}
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">时间信息</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">注册时间:</span>
                   <span className="ml-2">{formatDate(selectedUser.created_at)}</span>
                 </div>
+                {selectedUser.last_login_at && (
+                  <div>
+                    <span className="text-gray-600">最后登录:</span>
+                    <span className="ml-2">{formatDate(selectedUser.last_login_at)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Role and Status */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">角色与状态</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">最后登录:</span>
-                  <span className="ml-2">
-                    {selectedUser.last_login_at 
-                      ? formatDate(selectedUser.last_login_at)
-                      : '从未登录'
-                    }
-                  </span>
+                  <span className="text-gray-600">角色:</span>
+                  <Badge 
+                    variant={getRoleBadge(selectedUser.role).variant}
+                    className="ml-2"
+                  >
+                    {getRoleBadge(selectedUser.role).label}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="text-gray-600">状态:</span>
+                  <Badge 
+                    variant={getStatusBadge(selectedUser.status).variant}
+                    className="ml-2"
+                  >
+                    {getStatusBadge(selectedUser.status).label}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Info */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">财务信息</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">账户余额:</span>
+                  <span className="ml-2 font-medium">¥{selectedUser.balance}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">佣金余额:</span>
+                  <span className="ml-2 font-medium">¥{selectedUser.commission_balance}</span>
                 </div>
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button
-                variant={selectedUser.status === 1 ? 'danger' : 'success'}
-                onClick={() => {
-                  handleStatusChange(selectedUser.id, selectedUser.status)
-                  setShowUserModal(false)
-                }}
-              >
-                {selectedUser.status === 1 ? '禁用用户' : '启用用户'}
-              </Button>
               <Button
                 variant="outline"
                 onClick={() => setShowUserModal(false)}

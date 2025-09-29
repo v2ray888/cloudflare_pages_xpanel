@@ -143,10 +143,10 @@ app.get('/subscription', async (c) => {
     
     const subscription = await c.env.DB.prepare(`
       SELECT s.*, p.name as plan_name, p.traffic_gb, p.device_limit
-      FROM subscriptions s
+      FROM user_subscriptions s
       LEFT JOIN plans p ON s.plan_id = p.id
-      WHERE s.user_id = ? AND s.status = 1
-      ORDER BY s.expires_at DESC
+      WHERE s.user_id = ? AND s.status = 1 AND s.end_date > datetime('now')
+      ORDER BY s.end_date DESC
       LIMIT 1
     `).bind(payload.id).first()
 
@@ -156,7 +156,7 @@ app.get('/subscription', async (c) => {
     })
   } catch (error: any) {
     console.error('Get subscription error:', error)
-    throw new HTTPException(500, { message: '获取订阅信息失败' })
+    throw new HTTPException(500, { message: '获取订阅信息失败: ' + (error.message || '未知错误') })
   }
 })
 
@@ -200,6 +200,58 @@ app.get('/orders', async (c) => {
   } catch (error) {
     console.error('Get orders error:', error)
     throw new HTTPException(500, { message: '获取订单失败' })
+  }
+})
+
+// Get user stats
+app.get('/stats', async (c) => {
+  try {
+    const payload = c.get('jwtPayload')
+    
+    // Get user info including balance
+    const user = await c.env.DB.prepare(
+      'SELECT balance, commission_balance FROM users WHERE id = ?'
+    ).bind(payload.id).first()
+    
+    // Get total spent
+    const totalSpentResult = await c.env.DB.prepare(
+      'SELECT COALESCE(SUM(final_amount), 0) as total FROM orders WHERE user_id = ? AND status = 1'
+    ).bind(payload.id).first()
+    
+    // Get referral count
+    const referralCountResult = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM users WHERE referrer_id = ?'
+    ).bind(payload.id).first()
+    
+    // Get commission earned
+    const commissionResult = await c.env.DB.prepare(
+      'SELECT COALESCE(SUM(commission_amount), 0) as total FROM referral_commissions WHERE referrer_id = ? AND status = 1'
+    ).bind(payload.id).first()
+    
+    // Get current subscription
+    const subscription = await c.env.DB.prepare(`
+      SELECT s.*, p.name as plan_name, p.traffic_gb * 1073741824 as traffic_total
+      FROM user_subscriptions s
+      LEFT JOIN plans p ON s.plan_id = p.id
+      WHERE s.user_id = ? AND s.status = 1 AND s.end_date > datetime('now')
+      ORDER BY s.end_date DESC
+      LIMIT 1
+    `).bind(payload.id).first()
+
+    return c.json({
+      success: true,
+      data: {
+        totalSpent: (totalSpentResult?.total as number) || 0,
+        referralCount: (referralCountResult?.count as number) || 0,
+        commissionEarned: (commissionResult?.total as number) || 0,
+        subscription,
+        balance: (user?.balance as number) || 0,
+        commissionBalance: (user?.commission_balance as number) || 0
+      },
+    })
+  } catch (error: any) {
+    console.error('Get stats error:', error)
+    throw new HTTPException(500, { message: '获取统计信息失败: ' + (error.message || '未知错误') })
   }
 })
 

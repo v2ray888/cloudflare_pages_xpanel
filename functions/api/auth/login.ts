@@ -10,13 +10,25 @@ const loginSchema = z.object({
 })
 
 // CORS preflight response
-export const onRequestOptions = async () => {
+export const onRequestOptions = async ({ request }: { request: Request }) => {
+  const origin = request.headers.get('Origin');
+  
+  // 在开发环境中允许所有源，在生产环境中可以更严格
+  const isDev = origin && (
+    origin.startsWith('http://localhost:') || 
+    origin.startsWith('http://127.0.0.1:') ||
+    origin.endsWith('.pages.dev')
+  );
+  
+  const allowedOrigin = isDev ? origin : '*';
+  
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': allowedOrigin,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
     },
   });
 };
@@ -56,6 +68,17 @@ export const onRequestPost = async ({ request, env }: { request: Request, env: a
     // Don't send password hash to client
     const { password_hash, ...userResponse } = user;
 
+    const origin = request.headers.get('Origin');
+    
+    // 在开发环境中允许所有源，在生产环境中可以更严格
+    const isDev = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.pages.dev')
+    );
+    
+    const allowedOrigin = isDev ? origin : '*';
+
     const responseBody = {
       success: true,
       message: '登录成功',
@@ -69,7 +92,7 @@ export const onRequestPost = async ({ request, env }: { request: Request, env: a
       status: 200,
       headers: { 
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': allowedOrigin
       },
     });
 
@@ -87,6 +110,17 @@ export const onRequestPost = async ({ request, env }: { request: Request, env: a
         errorMessage = error.message || '发生未知错误';
     }
 
+    const origin = request.headers.get('Origin');
+    
+    // 在开发环境中允许所有源，在生产环境中可以更严格
+    const isDev = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.pages.dev')
+    );
+    
+    const allowedOrigin = isDev ? origin : '*';
+
     const errorBody = {
       success: false,
       message: errorMessage,
@@ -96,7 +130,7 @@ export const onRequestPost = async ({ request, env }: { request: Request, env: a
       status: statusCode,
       headers: { 
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': allowedOrigin
       },
     });
   }

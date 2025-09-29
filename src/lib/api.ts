@@ -2,13 +2,8 @@ import axios, { AxiosResponse } from 'axios'
 import { ApiResponse } from '@/types'
 import { toast } from 'react-hot-toast'
 
-// 使用生产环境URL作为默认值，同时支持开发环境
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (window.location.hostname.endsWith('.pages.dev') 
-    ? `https://${window.location.hostname}` 
-    : 'https://xpanel.121858.xyz')
-
-console.log('API Base URL:', API_BASE_URL)
+// 使用相对路径以支持代理
+const API_BASE_URL = ''
 
 // Create axios instance
 const api = axios.create({
@@ -17,7 +12,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: false,
 })
 
 // Request interceptor to add auth token
@@ -142,7 +137,7 @@ export const ordersApi = {
     api.post(`/api/orders/${id}/pay`),
   
   getUserOrders: (params?: any) =>
-    api.get('/api/user/orders', { params }),
+    api.get('/api/users/orders', { params }),
   
   getAll: (params?: any) =>
     api.get('/api/admin/orders', { params }),
@@ -183,19 +178,19 @@ export const serversApi = {
 // Users API
 export const usersApi = {
   getProfile: () =>
-    api.get('/api/user/profile'),
+    api.get('/api/users/profile'),
   
   updateProfile: (data: any) =>
-    api.put('/api/user/profile', data),
+    api.put('/api/users/profile', data),
   
   changePassword: (data: { current_password: string; new_password: string }) =>
-    api.put('/api/user/password', data),
+    api.put('/api/users/password', data),
   
   getSubscription: () =>
-    api.get('/api/user/subscription'),
+    api.get('/api/users/subscription'),
   
   getStats: () =>
-    api.get('/api/user/stats'),
+    api.get('/api/users/stats'),
   
   // Admin endpoints
   getAll: (params?: any) =>
@@ -219,32 +214,32 @@ export const redemptionApi = {
   redeem: (data: { code: string; email?: string }) =>
     api.post('/api/redemption/redeem', data),
   
-  generate: (data: { plan_id: number; count: number; expires_at?: string; batch_id?: string }) =>
-    api.post('/api/admin/redemption-codes/generate', data),
+  generate: (data: { plan_id: number; quantity: number; expires_at?: string }) =>
+    api.post('/api/admin/redemption/generate', data),
   
   getAll: (params?: any) =>
-    api.get('/api/admin/redemption-codes', { params }),
+    api.get('/api/admin/redemption', { params }),
   
   delete: (id: number) =>
-    api.delete(`/api/admin/redemption-codes/${id}`),
+    api.delete(`/api/admin/redemption/${id}`),
   
   batchDelete: (ids: number[]) =>
-    api.post('/api/admin/redemption-codes/batch-delete', { ids }),
+    api.post('/api/admin/redemption/batch-delete', { ids }),
 }
 
 // Referral API
 export const referralApi = {
   getStats: () =>
-    api.get('/api/user/referral/stats'),
+    api.get('/api/referrals/stats'),
   
   getCommissions: (params?: any) =>
-    api.get('/api/user/referral/commissions', { params }),
+    api.get('/api/referrals/commissions', { params }),
   
   getReferrals: (params?: any) =>
-    api.get('/api/user/referral/referrals', { params }),
+    api.get('/api/referrals/users', { params }),
   
   withdraw: (amount: number) =>
-    api.post('/api/user/referral/withdraw', { amount }),
+    api.post('/api/referrals/withdraw', { amount }),
   
   // Admin endpoints
   getAllCommissions: (params?: any) =>
@@ -263,13 +258,13 @@ export const referralApi = {
 // Dashboard API
 export const dashboardApi = {
   getStats: () =>
-    api.get('/api/admin/dashboard/stats'),
+    api.get('/api/admin/stats'),
   
   getChartData: (type: string, period: string) =>
-    api.get(`/api/admin/dashboard/chart/${type}`, { params: { period } }),
+    api.get(`/api/admin/chart/${type}`, { params: { period } }),
   
   getRecentActivity: () =>
-    api.get('/api/admin/dashboard/activity'),
+    api.get('/api/admin/activity'),
 }
 
 // Announcements API
@@ -292,10 +287,10 @@ export const settingsApi = {
   getAll: () =>
     api.get('/api/admin/settings'),
   
-  update: (key: string, value: string) =>
-    api.put('/api/admin/settings', { key, value }),
+  update: (data: Record<string, any>) =>
+    api.put('/api/admin/settings', data),
   
-  batchUpdate: (settings: Record<string, string>) =>
+  batchUpdate: (settings: Record<string, any>) =>
     api.put('/api/admin/settings/batch', { settings }),
 }
 
@@ -334,7 +329,7 @@ export const adminApi = {
   deletePlan: (id: number) => plansApi.delete(id),
   
   // Servers
-  getServers: () => serversApi.getAll(),
+  getServers: (params?: any) => api.get('/api/admin/servers', { params }),
   createServer: (data: any) => serversApi.create(data),
   updateServer: (id: number, data: any) => serversApi.update(id, data),
   deleteServer: (id: number) => serversApi.delete(id),
@@ -346,9 +341,15 @@ export const adminApi = {
   getRedeemCodes: (params?: any) => redemptionApi.getAll(params),
   createRedeemCodes: (data: any) => redemptionApi.generate(data),
   
+  // Referrals
+  getReferralCommissions: (params?: any) => referralApi.getAllCommissions(params),
+  settleReferralCommission: (id: number) => referralApi.settleCommission(id),
+  getReferralSettings: () => referralApi.getSettings(),
+  updateReferralSettings: (data: any) => referralApi.updateSettings(data),
+  
   // Dashboard Stats
   getDashboardStats: () => dashboardApi.getStats(),
   getStats: () => dashboardApi.getStats(),
-  getRecentOrders: () => api.get('/api/admin/orders/recent'),
-  getRecentUsers: () => api.get('/api/admin/users/recent'),
+  getRecentOrders: () => api.get('/api/admin/recent-orders'),
+  getRecentUsers: () => api.get('/api/admin/recent-users'),
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -37,19 +37,18 @@ export default function AdminRedemptionPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedCodes, setSelectedCodes] = useState<string[]>([])
   const [showCodesModal, setShowCodesModal] = useState(false)
+  const [planOptions, setPlanOptions] = useState<any[]>([])
   const limit = 20
 
   const queryClient = useQueryClient()
 
-  const { data: codesData, isLoading } = useQuery({
+  const { data: codesData, isLoading, error } = useQuery({
     queryKey: ['admin-redeem-codes', { page, limit, search, status: statusFilter }],
     queryFn: async () => {
-      const response = await adminApi.getRedeemCodes({ 
-        page, 
-        limit, 
-        search, 
-        status: statusFilter 
-      })
+      const params: any = { page, limit }
+      if (search) params.search = search
+      if (statusFilter !== null) params.status = statusFilter
+      const response = await adminApi.getRedeemCodes(params)
       return response.data
     },
   })
@@ -58,18 +57,71 @@ export default function AdminRedemptionPage() {
     queryKey: ['admin-plans-simple'],
     queryFn: async () => {
       const response = await adminApi.getPlans()
-      return response.data.data
+      return response.data
     },
   })
+
+  // 更新套餐选项
+  useEffect(() => {
+    if (plans && Array.isArray(plans.data)) {
+      setPlanOptions(plans.data.filter((plan: any) => plan.is_active))
+    }
+  }, [plans])
 
   const form = useForm<RedeemCodeForm>({
     resolver: zodResolver(redeemCodeSchema),
     defaultValues: {
+      plan_id: 0,
       quantity: 10,
       prefix: '',
       expires_at: '',
     },
   })
+
+  // 监听数量变化并验证
+  const quantityValue = form.watch('quantity')
+  useEffect(() => {
+    if (quantityValue < 1) {
+      form.setValue('quantity', 1)
+    } else if (quantityValue > 1000) {
+      form.setValue('quantity', 1000)
+    }
+  }, [quantityValue, form])
+
+  // 监听套餐选择变化，自动设置过期时间和前缀
+  const selectedPlanId = form.watch('plan_id')
+  useEffect(() => {
+    if (selectedPlanId && plans && Array.isArray(plans.data)) {
+      const selectedPlan = plans.data.find((plan: any) => plan.id === selectedPlanId)
+      if (selectedPlan) {
+        // 自动设置过期时间
+        if (selectedPlan.duration_days) {
+          // 计算过期时间：当前时间 + 套餐天数
+          const expirationDate = new Date()
+          expirationDate.setDate(expirationDate.getDate() + selectedPlan.duration_days)
+          
+          // 格式化为datetime-local输入框所需的格式 (YYYY-MM-DDTHH:mm)
+          const formattedDate = expirationDate.toISOString().slice(0, 16)
+          form.setValue('expires_at', formattedDate)
+        }
+        
+        // 自动设置前缀
+        let prefix = ''
+        if (selectedPlan.duration_days) {
+          if (selectedPlan.duration_days <= 30) {
+            prefix = 'M' // 月套餐
+          } else if (selectedPlan.duration_days <= 90) {
+            prefix = 'Q' // 季度套餐
+          } else if (selectedPlan.duration_days <= 180) {
+            prefix = 'H' // 半年套餐
+          } else {
+            prefix = 'Y' // 年套餐
+          }
+        }
+        form.setValue('prefix', prefix)
+      }
+    }
+  }, [selectedPlanId, plans, form])
 
   const createCodesMutation = useMutation({
     mutationFn: async (data: RedeemCodeForm) => {
@@ -78,20 +130,30 @@ export default function AdminRedemptionPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-redeem-codes'] })
-      toast.success(`成功生成 ${data.codes.length} 个兑换码`)
-      setSelectedCodes(data.codes)
+      // 修复：正确访问API响应中的codes数组
+      const codes = data.data?.codes || []
+      toast.success(`成功生成 ${codes.length} 个兑换码`)
+      setSelectedCodes(codes)
       setShowCodesModal(true)
       setShowCreateModal(false)
-      form.reset()
+      form.reset({
+        plan_id: 0,
+        quantity: 10,
+        prefix: '',
+        expires_at: '',
+      })
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || '生成失败'
+      console.error('Redemption code generation error:', error)
+      const message = error.response?.data?.message || error.message || '生成失败'
       toast.error(message)
     },
   })
 
-  const codes = codesData?.data || []
-  const totalPages = Math.ceil((codesData?.total || 0) / limit)
+  // 修正数据提取逻辑，添加更多保护
+  const codes = codesData?.data?.data || []
+  const total = codesData?.data?.total || 0
+  const totalPages = Math.ceil((total || 0) / limit)
 
   const statusOptions = [
     { value: null, label: '全部状态' },
@@ -102,7 +164,7 @@ export default function AdminRedemptionPage() {
 
   const getStatusBadge = (status: number) => {
     const statusMap = {
-      0: { variant: 'primary' as const, label: '未使用' },
+      0: { variant: 'default' as const, label: '未使用' },
       1: { variant: 'success' as const, label: '已使用' },
       2: { variant: 'secondary' as const, label: '已过期' },
     }
@@ -135,7 +197,14 @@ export default function AdminRedemptionPage() {
   }
 
   const onSubmit = (data: RedeemCodeForm) => {
-    createCodesMutation.mutate(data)
+    // 确保plan_id是数字并移除前端不存在的字段
+    const submitData = {
+      plan_id: Number(data.plan_id),
+      quantity: data.quantity,
+      prefix: data.prefix || undefined,
+      expires_at: data.expires_at || undefined
+    }
+    createCodesMutation.mutate(submitData)
   }
 
   return (
@@ -195,9 +264,9 @@ export default function AdminRedemptionPage() {
           <CardTitle className="flex items-center">
             <Gift className="w-5 h-5 mr-2" />
             兑换码列表
-            {codesData?.total && (
+            {total > 0 && (
               <span className="ml-2 text-sm font-normal text-gray-500">
-                (共 {codesData.total} 个兑换码)
+                (共 {total} 个兑换码)
               </span>
             )}
           </CardTitle>
@@ -206,6 +275,18 @@ export default function AdminRedemptionPage() {
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <LoadingSpinner size="lg" />
+              <span className="ml-2">加载中...</span>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-red-500 mb-2">加载失败</div>
+              <div className="text-sm text-gray-600">{(error as any).message}</div>
+              <Button 
+                className="mt-4" 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['admin-redeem-codes'] })}
+              >
+                重新加载
+              </Button>
             </div>
           ) : codes.length > 0 ? (
             <div className="space-y-4">
@@ -230,10 +311,10 @@ export default function AdminRedemptionPage() {
 
                   <div className="space-y-1">
                     <p className="text-sm font-medium">
-                      {code.plan?.name || '未知套餐'}
+                      {code.plan_name || '未知套餐'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {code.plan?.duration_days}天 / {code.plan?.traffic_gb}GB
+                      {code.duration_days ? `${code.duration_days}天` : ''}
                     </p>
                   </div>
 
@@ -249,10 +330,10 @@ export default function AdminRedemptionPage() {
                   </div>
 
                   <div className="space-y-1">
-                    {code.used_by_user ? (
+                    {code.used_by_email ? (
                       <>
                         <p className="text-sm">
-                          {code.used_by_user.email}
+                          {code.used_by_email}
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatDate(code.used_at)}
@@ -327,6 +408,14 @@ export default function AdminRedemptionPage() {
               <p className="text-gray-600">
                 {search || statusFilter !== null ? '没有找到匹配的兑换码' : '还没有生成任何兑换码'}
               </p>
+              {total === 0 && !search && statusFilter === null && (
+                <div className="mt-4">
+                  <Button onClick={() => setShowCreateModal(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    立即生成兑换码
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -335,7 +424,15 @@ export default function AdminRedemptionPage() {
       {/* Create Codes Modal */}
       <Modal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false)
+          form.reset({
+            plan_id: 0,
+            quantity: 10,
+            prefix: '',
+            expires_at: '',
+          })
+        }}
         title="生成兑换码"
         size="md"
       >
@@ -347,9 +444,10 @@ export default function AdminRedemptionPage() {
             <select
               {...form.register('plan_id', { valueAsNumber: true })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              defaultValue=""
             >
               <option value="">请选择套餐</option>
-              {plans?.map((plan: any) => (
+              {planOptions.map((plan: any) => (
                 <option key={plan.id} value={plan.id}>
                   {plan.name} - {plan.duration_days}天 / {plan.traffic_gb}GB
                 </option>
@@ -366,6 +464,8 @@ export default function AdminRedemptionPage() {
             <Input
               {...form.register('quantity', { valueAsNumber: true })}
               type="number"
+              min="1"
+              max="1000"
               label="生成数量"
               placeholder="10"
               error={form.formState.errors.quantity?.message}
@@ -379,25 +479,57 @@ export default function AdminRedemptionPage() {
               label="兑换码前缀"
               placeholder="VIP"
               error={form.formState.errors.prefix?.message}
-              helperText="可选，为兑换码添加前缀"
+              helperText={
+                selectedPlanId && planOptions.find((plan: any) => plan.id === selectedPlanId)
+                  ? `根据所选套餐自动设置前缀: ${(() => {
+                      const selectedPlan = planOptions.find((plan: any) => plan.id === selectedPlanId);
+                      if (selectedPlan) {
+                        if (selectedPlan.duration_days <= 30) return 'M (月套餐)';
+                        if (selectedPlan.duration_days <= 90) return 'Q (季度套餐)';
+                        if (selectedPlan.duration_days <= 180) return 'H (半年套餐)';
+                        return 'Y (年套餐)';
+                      }
+                      return '';
+                    })()}`
+                  : '可选，为兑换码添加前缀'
+              }
             />
           </div>
 
           <div>
-            <Input
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              过期时间
+            </label>
+            <input
               {...form.register('expires_at')}
               type="datetime-local"
-              label="过期时间"
-              error={form.formState.errors.expires_at?.message}
-              helperText="可选，不设置则永不过期"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
+            {form.formState.errors.expires_at && (
+              <p className="mt-1 text-sm text-red-600">
+                {form.formState.errors.expires_at.message}
+              </p>
+            )}
+            <p className="mt-1 text-sm text-gray-500">
+              {selectedPlanId && planOptions.find((plan: any) => plan.id === selectedPlanId)?.duration_days
+                ? `根据所选套餐自动计算（${planOptions.find((plan: any) => plan.id === selectedPlanId)?.duration_days}天后过期）`
+                : '可选，不设置则永不过期'}
+            </p>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setShowCreateModal(false)}
+              onClick={() => {
+                setShowCreateModal(false)
+                form.reset({
+                  plan_id: 0,
+                  quantity: 10,
+                  prefix: '',
+                  expires_at: '',
+                })
+              }}
             >
               取消
             </Button>

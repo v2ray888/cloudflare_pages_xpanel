@@ -133,11 +133,11 @@ app.post('/withdraw', async (c) => {
 
     // Create withdrawal request
     await c.env.DB.prepare(`
-      INSERT INTO commission_withdrawals (
-        user_id, amount, payment_method, payment_account, 
+      INSERT INTO withdrawals (
+        user_id, amount, payment_method, payment_account, real_name,
         status, created_at
-      ) VALUES (?, ?, ?, ?, 0, datetime('now'))
-    `).bind(payload.id, amount, payment_method, payment_account).run()
+      ) VALUES (?, ?, ?, ?, ?, 0, datetime('now'))
+    `).bind(payload.id, amount, payment_method, payment_account, 'Unknown').run()
 
     // Update user's commission balance
     await c.env.DB.prepare(

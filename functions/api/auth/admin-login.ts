@@ -1,5 +1,6 @@
 interface Env {
   DB: any;
+  JWT_SECRET: string;
 }
 
 interface RequestContext {
@@ -86,8 +87,31 @@ export const onRequestPost = async ({ request, env }: RequestContext) => {
       'UPDATE users SET last_login_at = datetime("now") WHERE id = ?'
     ).bind(user.id).run();
 
+    // 生成JWT token
+    const { sign } = await import('hono/jwt');
+    const token = await sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
+      },
+      env.JWT_SECRET
+    );
+
     // 移除密码字段
     const { password_hash, ...userWithoutPassword } = user;
+
+    const origin = request.headers.get('Origin');
+    
+    // 在开发环境中允许所有源，在生产环境中可以更严格
+    const isDev = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.pages.dev')
+    );
+    
+    const allowedOrigin = isDev ? origin : '*';
 
     return new Response(
       JSON.stringify({
@@ -95,17 +119,32 @@ export const onRequestPost = async ({ request, env }: RequestContext) => {
         message: '登录成功',
         data: {
           user: userWithoutPassword,
+          token,
         },
       }),
       {
         status: 200,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': allowedOrigin
         }
       }
     );
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Admin login error:', error);
     const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    const origin = request.headers.get('Origin');
+    
+    // 在开发环境中允许所有源，在生产环境中可以更严格
+    const isDev = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.pages.dev')
+    );
+    
+    const allowedOrigin = isDev ? origin : '*';
+    
     return new Response(
       JSON.stringify({
         success: false,
@@ -114,7 +153,8 @@ export const onRequestPost = async ({ request, env }: RequestContext) => {
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': allowedOrigin || '*'
         }
       }
     );

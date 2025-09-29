@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AdminRoute } from '@/components/AdminRoute'
+import { MobileNav } from '@/components/layout/MobileNav'
 
 // Public pages
 import HomePage from '@/pages/HomePage'
@@ -9,6 +10,8 @@ import PlansPage from '@/pages/PlansPage'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
 import RedeemPage from '@/pages/RedeemPage'
+import TestPage from '@/pages/TestPage'
+import TestLoginRedirect from '@/pages/TestLoginRedirect'
 
 // User pages
 import UserLayout from '@/layouts/UserLayout'
@@ -32,6 +35,7 @@ import AdminReferrals from '@/pages/admin/Referrals'
 import AdminFinance from '@/pages/admin/Finance'
 import AdminWithdrawals from '@/pages/admin/Withdrawals'
 import AdminSettings from '@/pages/admin/Settings'
+import AdminLogin from '@/pages/admin/Login'
 
 // Layout
 import PublicLayout from '@/layouts/PublicLayout'
@@ -45,8 +49,11 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="plans" element={<PlansPage />} />
           <Route path="login" element={<LoginPage />} />
+          <Route path="admin/login" element={<AdminLogin />} />
           <Route path="register" element={<RegisterPage />} />
           <Route path="redeem" element={<RedeemPage />} />
+          <Route path="test" element={<TestPage />} />
+          <Route path="test-login" element={<TestLoginRedirect />} />
         </Route>
 
         {/* User routes */}
@@ -90,6 +97,7 @@ function App() {
           <Route path="settings" element={<AdminSettings />} />
         </Route>
       </Routes>
+      <MobileNav />
     </AuthProvider>
   )
 }

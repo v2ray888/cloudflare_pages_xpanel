@@ -1,29 +1,21 @@
-// 测试 JWT 生成的脚本
-import { sign } from 'hono/jwt'
+// 测试JWT验证
+const { verify } = require('hono/jwt');
 
-async function testJWT() {
+// 使用与wrangler.toml中相同的JWT_SECRET
+const JWT_SECRET = "Q8|)X)+Ac37*fSP%6o5wC#J7K=D)V@Ut";
+
+// 测试令牌
+const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiLnlKjmiLcxIiwiZW1haWwiOiJ1c2VyMUBleGFtcGxlLmNvbSIsInJvbGUiOjAsImV4cCI6MTc1OTY3NzM3NCwiaWF0IjoxNzU5MDcyNTc0fQ.h3QjiAFi2hwVpb_sTe8xpneO5Tss5Dfp4VN7iuOn3o4";
+
+async function testJwt() {
   try {
-    // 模拟用户数据
-    const userData = {
-      id: 1,
-      email: 'admin@xpanel.com',
-      role: 1,
-      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-    };
-    
-    // 使用一个测试密钥
-    const secret = 'test-secret-key-for-testing';
-    
-    console.log('User data for token:', userData);
-    console.log('Secret length:', secret.length);
-    
-    // 尝试生成 JWT
-    const token = await sign(userData, secret);
-    console.log('JWT token generated successfully:', token);
+    const payload = await verify(testToken, JWT_SECRET);
+    console.log("JWT验证成功:");
+    console.log(payload);
   } catch (error) {
-    console.error('JWT token generation failed:', error);
+    console.log("JWT验证失败:");
+    console.log(error.message);
   }
 }
 
-// 运行测试
-testJWT();
+testJwt();
