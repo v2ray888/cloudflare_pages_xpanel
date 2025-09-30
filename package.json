@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "VPN销售管理系统",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:api": "wrangler dev functions/_worker.ts --env production",

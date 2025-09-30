@@ -8,6 +8,30 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>()
 
+// CORS preflight response
+app.options('*', (c) => {
+  const origin = c.req.header('Origin');
+  
+  // 在开发环境中允许所有源，在生产环境中可以更严格
+  const isDev = origin && (
+    origin.startsWith('http://localhost:') || 
+    origin.startsWith('http://127.0.0.1:') ||
+    origin.endsWith('.pages.dev')
+  );
+  
+  const allowedOrigin = isDev ? origin : '*';
+  
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': allowedOrigin,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+});
+
 // Generate order number
 function generateOrderNumber() {
   const timestamp = Date.now().toString().slice(-6)
@@ -17,6 +41,7 @@ function generateOrderNumber() {
 
 const createOrderSchema = z.object({
   plan_id: z.number().int().positive('请选择套餐'),
+  payment_method: z.string().optional(), // 添加payment_method参数
   coupon_code: z.string().optional(),
 })
 
@@ -25,7 +50,7 @@ app.post('/', async (c) => {
   try {
     const payload = c.get('jwtPayload')
     const body = await c.req.json()
-    const { plan_id, coupon_code } = createOrderSchema.parse(body)
+    const { plan_id, payment_method, coupon_code } = createOrderSchema.parse(body)
 
     // Get plan
     const plan = await c.env.DB.prepare(
@@ -63,11 +88,12 @@ app.post('/', async (c) => {
     const order_no = generateOrderNumber()
 
     // Create order
+    // 检查数据库表结构，移除coupon_id字段
     const result = await c.env.DB.prepare(`
       INSERT INTO orders (
         user_id, plan_id, order_no, amount, discount_amount, final_amount,
-        coupon_id, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, datetime('now'))
+        status, payment_method, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
       payload.id,
       plan_id,
@@ -75,7 +101,8 @@ app.post('/', async (c) => {
       plan.price,
       discount_amount,
       final_amount,
-      coupon_id
+      0, // status
+      payment_method || 'alipay' // 使用传入的支付方式或默认为alipay
     ).run()
 
     if (!result.success) {
@@ -83,10 +110,12 @@ app.post('/', async (c) => {
     }
 
     // Update coupon usage if used
+    // 注意：由于数据库中没有coupon_id字段，我们需要修改这部分逻辑
     if (coupon_id) {
-      await c.env.DB.prepare(
-        'UPDATE coupons SET usage_count = usage_count + 1 WHERE id = ?'
-      ).bind(coupon_id).run()
+      // 暂时注释掉这部分，因为数据库中没有coupon_id字段
+      // await c.env.DB.prepare(
+      //   'UPDATE coupons SET usage_count = usage_count + 1 WHERE id = ?'
+      // ).bind(coupon_id).run()
     }
 
     // Get created order with plan info

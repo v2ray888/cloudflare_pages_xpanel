@@ -1,8 +1,8 @@
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Check, Star, Zap } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { plansApi } from '@/lib/api'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { plansApi, ordersApi } from '@/lib/api'
 import { Plan } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -14,6 +14,7 @@ import { toast } from 'react-hot-toast'
 
 export default function PlansPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
 
   const { data: plans, isLoading, error } = useQuery({
@@ -24,15 +25,54 @@ export default function PlansPage() {
     },
   })
 
+  const createOrderMutation = useMutation({
+    mutationFn: async (plan: Plan) => {
+      console.log('Creating order for plan:', plan);
+      const response = await ordersApi.create({
+        plan_id: plan.id,
+        payment_method: 'alipay' // 默认支付方式，可以在支付页面更改
+      });
+      console.log('Order creation response:', response);
+      return response.data.data;
+    },
+    onSuccess: (data) => {
+      console.log('Order created successfully:', data);
+      console.log('Navigating to payment page with order ID:', data.id);
+      // 跳转到支付页面
+      try {
+        // 确保data.id存在且为有效值
+        if (data && data.id) {
+          navigate(`/payment/${data.id}`);
+          console.log('Navigation completed');
+        } else {
+          console.error('Invalid order ID:', data);
+          // 检查响应数据结构
+          console.log('Full response data structure:', data);
+          toast.error('订单创建异常，请重试');
+        }
+      } catch (error) {
+        console.error('Navigation error:', error);
+        toast.error('页面跳转失败');
+      }
+    },
+    onError: (error: any) => {
+      console.error('Order creation error:', error);
+      console.error('Error response:', error.response);
+      toast.error(error.response?.data?.message || error.message || '创建订单失败');
+    },
+  });
+
   const handleSelectPlan = (plan: Plan) => {
+    console.log('Handle select plan called with plan:', plan);
     if (!user) {
-      toast.error('请先登录')
-      return
+      console.log('User not logged in, showing error toast');
+      toast.error('请先登录');
+      return;
     }
-    // Plan selected
-    // 这里可以跳转到支付页面或打开支付模态框
-    toast.success(`已选择 ${plan.name}`)
-  }
+    console.log('User logged in, creating order');
+    // 创建订单并跳转到支付页面
+    createOrderMutation.mutate(plan);
+  };
 
   if (isLoading) {
     return (

@@ -12,6 +12,7 @@ import RegisterPage from '@/pages/RegisterPage'
 import RedeemPage from '@/pages/RedeemPage'
 import TestPage from '@/pages/TestPage'
 import TestLoginRedirect from '@/pages/TestLoginRedirect'
+import PaymentPage from '@/pages/PaymentPage'
 
 // User pages
 import UserLayout from '@/layouts/UserLayout'
@@ -52,6 +53,7 @@ function App() {
           <Route path="admin/login" element={<AdminLogin />} />
           <Route path="register" element={<RegisterPage />} />
           <Route path="redeem" element={<RedeemPage />} />
+          <Route path="payment/:orderId" element={<PaymentPage />} />
           <Route path="test" element={<TestPage />} />
           <Route path="test-login" element={<TestLoginRedirect />} />
         </Route>
