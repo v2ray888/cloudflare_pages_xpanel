@@ -56,7 +56,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       
       return new Response(JSON.stringify(errorResponse), {
         status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowedOrigin },
+        headers: { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': allowedOrigin },
       });
     }
 
@@ -85,7 +85,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     
     return new Response(JSON.stringify({ success: true, data: parsedResults || [] }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowedOrigin },
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': allowedOrigin },
     });
 
   } catch (error: any) {
@@ -101,7 +101,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     };
     return new Response(JSON.stringify(errorResponse), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' },
     });
   }
 };

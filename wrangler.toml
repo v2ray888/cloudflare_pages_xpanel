@@ -9,8 +9,8 @@ PAYMENT_SECRET = "ssUl$ZWvY+A_To12A;[pJA2hcG(M)[E1"
 
 [[env.production.d1_databases]]
 binding = "DB"
-database_name = "xpanel-db"
-database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
+database_name = "xpanel-db-new"
+database_id = "7d6a9b5a-85e0-4d35-9d48-888cd9bfccba"
 
 [env.preview]
 ENVIRONMENT = "preview"
@@ -19,12 +19,5 @@ PAYMENT_SECRET = "ssUl$ZWvY+A_To12A;[pJA2hcG(M)[E1"
 
 [[env.preview.d1_databases]]
 binding = "DB"
-database_name = "xpanel-db"
-database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
-
-JWT_SECRET = "Q8|)X)+Ac37*fSP%6o5wC#J7K=D)V@Ut"
-
-[[ d1_databases ]]
-binding = "DB"
-database_name = "xpanel-db"
-database_id = "a269df33-6823-446c-b688-8c1373ef7a67"
+database_name = "xpanel-db-new"
+database_id = "7d6a9b5a-85e0-4d35-9d48-888cd9bfccba"

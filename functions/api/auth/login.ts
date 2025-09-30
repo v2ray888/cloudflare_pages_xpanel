@@ -91,7 +91,7 @@ export const onRequestPost = async ({ request, env }: { request: Request, env: a
     return new Response(JSON.stringify(responseBody), {
       status: 200,
       headers: { 
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Access-Control-Allow-Origin': allowedOrigin
       },
     });
@@ -129,7 +129,7 @@ export const onRequestPost = async ({ request, env }: { request: Request, env: a
     return new Response(JSON.stringify(errorBody), {
       status: statusCode,
       headers: { 
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Access-Control-Allow-Origin': allowedOrigin
       },
     });

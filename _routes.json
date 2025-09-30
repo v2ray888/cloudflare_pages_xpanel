@@ -3,5 +3,8 @@
   "include": [
     "/api/*"
   ],
-  "exclude": []
+  "exclude": [
+    "/assets/*",
+    "/vite.svg"
+  ]
 }

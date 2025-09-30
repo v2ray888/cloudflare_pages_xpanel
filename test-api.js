@@ -1,27 +1,69 @@
-const axios = require('axios');
+const http = require('http');
 
-async function testApi() {
-  try {
-    // First, login to get a valid token
-    const loginResponse = await axios.post('http://localhost:8787/api/auth/admin-login', {
-      email: 'admin@xpanel.com',
-      password: 'admin123'
-    });
+// 测试登录API
+const data = JSON.stringify({
+  email: 'admin@xpanel.com',
+  password: 'admin'
+});
 
-    const token = loginResponse.data.data.token;
-    console.log('Token:', token);
+console.log('正在发送请求到: http://127.0.0.1:8787/api/auth/login');
+console.log('请求数据:', data);
 
-    // Test the referral commissions API
-    const commissionsResponse = await axios.get('http://localhost:8787/api/admin/referrals/commissions?page=1&limit=20', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    console.log('Commissions API Response:', commissionsResponse.data);
-  } catch (error) {
-    console.error('Error:', error.response ? error.response.data : error.message);
+const options = {
+  hostname: '127.0.0.1',
+  port: 8787,
+  path: '/api/auth/login',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(data)
   }
-}
+};
 
-testApi();
+const req = http.request(options, (res) => {
+  console.log(`状态码: ${res.statusCode}`);
+  console.log(`响应头:`, res.headers);
+  
+  let responseData = '';
+  
+  res.on('data', (chunk) => {
+    responseData += chunk;
+  });
+  
+  res.on('end', () => {
+    console.log('响应数据:');
+    console.log(responseData);
+    
+    // 检查是否是UTF-8编码
+    console.log('响应数据的Buffer表示:');
+    console.log(Buffer.from(responseData, 'utf8'));
+    
+    console.log('解析后的JSON:');
+    try {
+      const jsonData = JSON.parse(responseData);
+      console.log(jsonData);
+      
+      // 检查消息字段是否正确显示中文
+      if (jsonData.message) {
+        console.log('消息字段内容:', jsonData.message);
+        console.log('消息字段UTF-8编码:', Buffer.from(jsonData.message, 'utf8').toString('hex'));
+      }
+    } catch (error) {
+      console.error('解析JSON时出错:', error);
+      console.log('原始响应数据:', responseData);
+    }
+  });
+});
+
+req.on('error', (error) => {
+  console.error('请求出错:', error);
+});
+
+req.write(data);
+req.end();
+
+// 设置超时
+req.setTimeout(5000, () => {
+  console.error('请求超时');
+  req.destroy();
+});

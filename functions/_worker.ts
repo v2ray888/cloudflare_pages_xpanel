@@ -45,13 +45,15 @@ app.use('*', async (c, next) => {
   
   const allowedOrigin = isDev ? origin : '*';
   
-  // Set CORS headers
+  // Set CORS headers with proper encoding
   c.res.headers.set('Access-Control-Allow-Origin', allowedOrigin);
+  c.res.headers.set('Content-Type', 'application/json; charset=utf-8');
   
   await next();
   
   // Set CORS headers for the response
   c.res.headers.set('Access-Control-Allow-Origin', allowedOrigin);
+  c.res.headers.set('Content-Type', 'application/json; charset=utf-8');
 });
 
 // Add OPTIONS handlers before JWT middleware
@@ -290,9 +292,17 @@ app.options('/api/admin/settings/batch', (c) => {
 
 // JWT middleware for protected routes
 const jwtMiddleware = async (c: any, next: any) => {
-  console.log('Verifying with secret:', c.env.JWT_SECRET);
-  const authMiddleware = jwt({ secret: c.env.JWT_SECRET, alg: 'HS256' })
-  return authMiddleware(c, next)
+  console.log('JWT middleware called for:', c.req.url);
+  try {
+    console.log('Verifying with secret:', c.env.JWT_SECRET);
+    const authMiddleware = jwt({ secret: c.env.JWT_SECRET, alg: 'HS256' })
+    const result = await authMiddleware(c, next)
+    console.log('JWT verification successful');
+    return result;
+  } catch (error) {
+    console.error('JWT verification failed:', error);
+    return c.json({ success: false, message: 'Unauthorized' }, 401);
+  }
 }
 
 // Apply JWT middleware to protected routes
@@ -303,7 +313,7 @@ app.use('/api/orders/*', jwtMiddleware);
 // 注意：兑换路由不需要JWT认证，所以不应用中间件
 // app.use('/api/redemption/*', jwtMiddleware);
 app.use('/api/referrals/*', jwtMiddleware);
-app.use('/api/withdrawals/*', jwtMiddleware);
+app.use('/api/withdrawals', jwtMiddleware);
 app.use('/api/admin/*', jwtMiddleware);
 
 // Health check
@@ -312,6 +322,7 @@ app.get('/', (c) => {
 })
 
 // API routes
+console.log('Registering API routes');
 app.route('/api/admin', adminRoutes)
 app.route('/api/admin/finance', financeRoutes)
 app.route('/api/admin/redemption', redemptionAdminRoutes)
@@ -325,10 +336,13 @@ app.route('/api/redemption', redemptionRoutes)
 app.route('/api/referrals', referralRoutes)
 app.route('/api/user/servers', serverRoutes)
 app.route('/api/withdrawals', withdrawalRoutes)
+console.log('API routes registered');
 
 // Public API routes
 app.get('/api/plans', async (c) => {
   const response = await plansHandler({ request: c.req.raw, env: c.env } as any)
+  // 确保响应头设置正确的字符编码
+  response.headers.set('Content-Type', 'application/json; charset=utf-8')
   return response
 })
 
@@ -396,14 +410,35 @@ app.post('/api/auth/login', async (c) => {
     
     const { password_hash, ...userResponse } = user;
 
-    return c.json({
+    // 使用手动创建的 Response 来确保字符编码正确
+    const response = {
       success: true,
       message: '登录成功',
       data: {
         user: userResponse,
-        token,
+        token: token, // 确保token是字符串
       },
-    })
+    };
+
+    // 获取请求来源
+    const origin = c.req.header('Origin');
+    
+    // 在开发环境中允许所有源，在生产环境中可以更严格
+    const isDev = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.pages.dev')
+    );
+    
+    const allowedOrigin = isDev ? origin : '*';
+
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { 
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': allowedOrigin
+      },
+    });
 
   } catch (error: any) {
     let errorMessage = '登录失败';
@@ -419,8 +454,26 @@ app.post('/api/auth/login', async (c) => {
         errorMessage = error.message || '发生未知错误';
     }
     
+    // 获取请求来源
+    const origin = c.req.header('Origin');
+    
+    // 在开发环境中允许所有源，在生产环境中可以更严格
+    const isDev = origin && (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('.pages.dev')
+    );
+    
+    const allowedOrigin = isDev ? origin : '*';
+    
     c.status(statusCode as any);
-    return c.json({ success: false, message: errorMessage });
+    return new Response(JSON.stringify({ success: false, message: errorMessage }), {
+      status: statusCode,
+      headers: { 
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': allowedOrigin
+      },
+    });
   }
 })
 

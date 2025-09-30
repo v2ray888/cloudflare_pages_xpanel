@@ -2,6 +2,9 @@ import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { z } from 'zod'
 
+// 添加调试日志
+console.log('Loading withdrawal routes');
+
 type Bindings = {
   DB: D1Database
 }
@@ -70,8 +73,10 @@ app.post('/', async (c) => {
 
 // Get user's withdrawal history
 app.get('/', async (c) => {
+  console.log('Handling GET /api/withdrawals request');
   try {
     const payload = c.get('jwtPayload')
+    console.log('JWT payload:', payload);
     const page = parseInt(c.req.query('page') || '1')
     const limit = parseInt(c.req.query('limit') || '20')
     const offset = (page - 1) * limit

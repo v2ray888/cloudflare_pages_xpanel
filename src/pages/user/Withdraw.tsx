@@ -63,6 +63,9 @@ export default function WithdrawPage() {
     },
   })
 
+  // 确保withdrawals是数组类型
+  const withdrawalList = Array.isArray(withdrawals) ? withdrawals : (withdrawals?.data || [])
+
   const withdrawalMutation = useMutation({
     mutationFn: async (data: WithdrawalForm) => {
       const response = await withdrawalApi.submitWithdrawal(data)
@@ -309,9 +312,9 @@ export default function WithdrawPage() {
             <div className="flex items-center justify-center h-32">
               <LoadingSpinner />
             </div>
-          ) : withdrawals && withdrawals.length > 0 ? (
+          ) : withdrawalList && withdrawalList.length > 0 ? (
             <div className="space-y-4">
-              {withdrawals.map((withdrawal: any) => (
+              {withdrawalList.map((withdrawal: any) => (
                 <div key={withdrawal.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
